@@ -113,18 +113,35 @@ export async function fetchShopSettings({ signal } = {}) {
 }
 
 /**
- * The FAQ a shop owner edited in Keel -> Website.
+ * One section of a page the site declares in public/keel-manifest.json.
  *
- * page_key/section_key must match what public/keel-manifest.json declares
- * (`pages.faq.sections[].key`), because those strings ARE the storage keys in
- * the page_content table. Change one and you silently read an empty array.
+ * page/section must match `pages.<page>.sections[].key` exactly, because those
+ * strings ARE the storage keys in the page_content table. Change one and you
+ * silently read an empty array.
+ *
+ * One request per declared page, and `?page=X` returns every section of that
+ * page in one response — so several fields in a single section cost the same as
+ * one field. That is why delivery keeps note, same_day and areas in one
+ * `details` section rather than three sections.
+ *
+ * There is deliberately no way to fetch everything: the route returns an empty
+ * array when neither parameter is given, because "all rows the caller cannot
+ * address" is not a useful answer.
+ */
+export async function fetchPageSection(page, section, { signal } = {}) {
+  if (!hasToken) return []
+  const query = new URLSearchParams({ page })
+  if (section) query.set('section', section)
+  const rows = await get(`/api/page-content?${query.toString()}`, { signal })
+  return Array.isArray(rows) ? rows : []
+}
+
+/**
+ * The FAQ a shop owner edited in Keel -> Website.
  *
  * Returns [] rather than throwing when there is nothing published, so a brand
  * new shop with no saved FAQ is an ordinary empty result and not a failure.
  */
 export async function fetchFaq({ signal } = {}) {
-  if (!hasToken) return []
-  const rows = await get('/api/page-content?page=faq&section=items', { signal })
-  if (!Array.isArray(rows)) return []
-  return rows
+  return fetchPageSection('faq', 'items', { signal })
 }

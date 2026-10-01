@@ -17,6 +17,7 @@ import { BackToTop } from './components/BackToTop.jsx'
 import { useOrder } from './hooks/useOrder.js'
 import { useShopSettings } from './hooks/useShopSettings.js'
 import { useRemoteServices } from './hooks/useRemoteServices.js'
+import { useRemoteDelivery } from './hooks/useRemoteDelivery.js'
 
 /**
  * One page, in the order a visitor actually needs it:
@@ -32,14 +33,16 @@ import { useRemoteServices } from './hooks/useRemoteServices.js'
 export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  // Three independent reads, each with its own fallback:
+  // Four independent reads, each with its own fallback:
   //   settings  overlays identity onto the config, which is already accurate
   //   services  IS the catalogue, so it is held in state and threaded through
+  //   delivery  overlays the owner's areas and pickup promise
   //   faq       overlays copy, config is the fallback
   // The catalogue is not mutated into business.services: useOrder memoises over
   // it, and a list replaced after that memo ran would leave the basket stale.
   const { toggles } = useShopSettings()
   const catalogue = useRemoteServices()
+  useRemoteDelivery()
   const order = useOrder(catalogue.services)
 
   const openSheet = useCallback(() => setSheetOpen(true), [])

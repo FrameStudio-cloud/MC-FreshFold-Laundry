@@ -186,3 +186,71 @@ export function shopFeatureToggles(raw) {
   if (!toggles || typeof toggles !== 'object' || Array.isArray(toggles)) return {}
   return toggles
 }
+
+/**
+ * The area names the OWNER saved, and only those.
+ *
+ * Kept separate from the patches on purpose. `deliveryPatches` falls back to
+ * the config, so reading `business.delivery.areas` afterwards would hand back
+ * the placeholder list whether or not anyone saved anything — and publishing
+ * those as `areaServed` in the structured data is exactly the thing the
+ * runtime merge exists to avoid.
+ *
+ * Returns [] when nothing usable was saved, which is the signal the caller
+ * should treat as "publish no area at all".
+ */
+export function savedAreas(rows) {
+  const content = rows?.[0]?.content
+  if (!content || typeof content !== 'object' || !Array.isArray(content.areas)) return []
+  return content.areas
+    .map((row) => (typeof row?.name === 'string' ? row.name.trim() : ''))
+    .filter(Boolean)
+}
+
+/**
+ * Patches for the delivery block, from a `pages.delivery.sections[].details`
+ * row the owner saved in Keel -> Website.
+ *
+ * Only the three fields declared in the manifest are read. `delivery.free`
+ * deliberately is NOT: "is pickup free" is a boolean, and the editor has no
+ * boolean type, so it would arrive as the string "yes" and the page would have
+ * to guess at it. It stays in business.js where a typo is impossible.
+ *
+ * Same non-empty-only rule as the rest of this file: an empty textarea is a
+ * blank the owner left, not a request to delete the sentence.
+ */
+export function deliveryPatches(rows) {
+  const content = rows?.[0]?.content
+  if (!content || typeof content !== 'object') return []
+
+  const patches = []
+
+  if (isText(content.note)) {
+    patches.push(() => {
+      business.delivery.feeNote = content.note.trim()
+    })
+  }
+
+  if (isText(content.same_day)) {
+    patches.push(() => {
+      business.delivery.sameDayCutoff = content.same_day.trim()
+    })
+  }
+
+  const areas = savedAreas(rows)
+  if (areas.length) {
+    patches.push(() => {
+      business.delivery.areas = areas
+    })
+  }
+
+  // A note about collection is a promise about the whole town, so the card only
+  // earns its place once there is something to show.
+  if (patches.length) {
+    patches.push(() => {
+      business.delivery.available = true
+    })
+  }
+
+  return patches
+}

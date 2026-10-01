@@ -75,14 +75,27 @@ export const business = {
   hours: [{ days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], opens: '08:00', closes: '17:00' }],
 
   // ---------------------------------------------------------------- delivery
-  // [REPLACE] CONFIRM WITH THE OWNER. The database has no delivery settings, so
-  // the areas below are placeholders and the copy makes no promise about fees
-  // until it is confirmed.
+  /**
+   * FALLBACK copy and the one setting that is not owner-editable.
+   *
+   * feeNote, sameDayCutoff and areas are overlaid from Keel -> Website ->
+   * "Delivery & pickup" (see hooks/useRemoteDelivery.js). What is here shows
+   * until the owner saves that page, and the values below are therefore
+   * PLACEHOLDERS, not facts:
+   *
+   *   [REPLACE] Confirm the real areas with the owner. The database has no
+   *   delivery settings at all, so nothing here has been verified.
+   *
+   * `free` is deliberately NOT editable from the dashboard. "Is pickup free" is
+   * a boolean and the page editor has no boolean type, so it would arrive as the
+   * string "yes" and the site would have to guess. It stays here where a typo is
+   * impossible.
+   */
   delivery: {
     available: true, // [REPLACE] false hides every "free pickup" mention and the delivery step
     free: true, // [REPLACE]
     feeNote: 'We collect from your door in {area} and around Muranga. Message us to confirm your area and the collection time.', // [REPLACE]
-    areas: ['Kariani', 'Muranga Town', 'Kangema'], // [REPLACE]
+    areas: ['Kariani', 'Muranga Town', 'Kangema'], // [REPLACE] unverified placeholders
     sameDayCutoff: 'Order early and we will prioritise your wash for same-day collection.', // [REPLACE]
   },
 

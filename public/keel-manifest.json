@@ -62,6 +62,47 @@
           ]
         }
       ]
+    },
+    "delivery": {
+      "label": "Delivery & pickup",
+      "description": "Where you collect, and what you promise",
+      "icon": "truck",
+      "sections": [
+        {
+          "key": "details",
+          "label": "Pickup details",
+          "description": "Shown in the services intro, the how-it-works note and the contact card.",
+          "fields": [
+            {
+              "key": "note",
+              "type": "textarea",
+              "label": "What you promise about collection",
+              "placeholder": "We collect free within Kariani. Elsewhere we confirm on WhatsApp."
+            },
+            {
+              "key": "same_day",
+              "type": "text",
+              "label": "Same-day note",
+              "placeholder": "Order before 10:00 AM for same-day collection."
+            },
+            {
+              "key": "areas",
+              "type": "array",
+              "label": "Areas you cover",
+              "description": "Shown as pills in the contact card, in this order.",
+              "addLabel": "Add area",
+              "itemFields": [
+                {
+                  "key": "name",
+                  "type": "text",
+                  "label": "Area",
+                  "placeholder": "Kariani"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }

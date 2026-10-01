@@ -76,14 +76,11 @@ export function buildJsonLd(url) {
       closes: row.closes,
     })),
     sameAs: [business.instagramUrl].filter(Boolean),
-    areaServed: (business.delivery.areas ?? []).map((area) => ({
-      '@type': 'City',
-      name: area,
-    })),
-    // NOTE: no makesOffer here. The catalogue now comes from /api/services at
-    // runtime, so at build time there is no price to publish and inventing one
-    // would be a lie in the structured data. The offer list is merged in once the
-    // services have loaded - see applyServiceSchema().
+    // Neither makesOffer nor areaServed is emitted at build time. Both are
+    // owner-editable at runtime — services via /api/services, areas via the
+    // delivery page — so at build time there is no price to publish and no
+    // confirmed service area. Both are merged in once their requests answer;
+    // see applyServiceSchema() and applyDeliverySchema().
   }
 
   if (business.email) data.email = business.email
@@ -124,5 +121,37 @@ export function applyServiceSchema(services) {
   } catch {
     // A malformed script is not worth breaking the page over; the core
     // LocalBusiness data is already in the HTML for a non-JS crawler.
+  }
+}
+
+/**
+ * Merge the shop's confirmed service areas into the page's JSON-LD.
+ *
+ * Takes the areas the OWNER saved rather than reading business.delivery.areas.
+ * The config's list is a placeholder — nothing has confirmed it — and publishing
+ * those as structured data would state a service area the shop may not cover. An
+ * empty array means "publish no area at all", which is the honest answer for a
+ * shop that has not set one up.
+ *
+ * Writes only its own key, so it does not matter whether the services and
+ * delivery requests finish in either order.
+ */
+export function applyDeliverySchema(areas) {
+  if (typeof document === 'undefined') return
+
+  const script = document.getElementById(SCHEMA_ID)
+  if (!script) return
+
+  const names = (Array.isArray(areas) ? areas : [])
+    .filter((a) => typeof a === 'string' && a.trim())
+    .map((a) => a.trim())
+  if (!names.length) return
+
+  try {
+    const data = JSON.parse(script.textContent)
+    data.areaServed = names.map((name) => ({ '@type': 'City', name }))
+    script.textContent = JSON.stringify(data)
+  } catch {
+    // As above: the core node is already in the HTML.
   }
 }
