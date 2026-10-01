@@ -35,7 +35,7 @@ function seoFromConfig() {
             })),
             {
               tag: 'script',
-              attrs: { type: 'application/ld+json' },
+              attrs: { type: 'application/ld+json', id: 'keel-localbusiness' },
               // Escaping "<" stops a stray "<" in a config string from closing
               // the script element and dumping the schema into the page.
               children: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),

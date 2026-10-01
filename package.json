@@ -10,9 +10,10 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "audit:design": "node audit.mjs",
-    "test:ui": "node test-interactions.mjs && node test-line-totals.mjs && node test-order-flow.mjs && node scripts/test-hours.mjs",
+    "test:ui": "node test-interactions.mjs && node test-line-totals.mjs && node test-order-flow.mjs && node scripts/test-hours.mjs && node test-catalogue-failure.mjs",
     "test:hours": "node scripts/test-hours.mjs",
-    "test:remote": "node test-remote-fetch.mjs"
+    "test:remote": "node test-remote-fetch.mjs",
+    "test:failure": "node test-catalogue-failure.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",

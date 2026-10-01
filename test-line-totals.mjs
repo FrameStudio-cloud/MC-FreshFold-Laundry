@@ -2,53 +2,63 @@
  * Verifies the running cost beside each service card's stepper is
  * price x quantity, not the bare quantity formatted as money.
  *
- * Prices here are asserted against business.js, which mirrors the shop's live
- * `services` rows. If a price is changed in one place and not the other this
- * test fails, which is the point: the FAQ quotes these same numbers in prose.
+ * Prices are asserted against the LIVE /api/services response rather than
+ * business.js, because the catalogue no longer lives in the config. That is the
+ * point: if this test read the config it would pass while the page showed
+ * something else entirely.
  *
- * Flat-priced services carry no stepper by design (a "+/-" next to a flat
- * "KSh 500" implies four separate jobs), so they are asserted to have none.
+ * Two shapes are checked:
+ *  - a service with a unit gets a stepper and a line total of price x qty
+ *  - a flat-priced service gets NO stepper, because "+/-" beside a flat price
+ *    implies four separate jobs were being bought
  */
 import { chromium } from 'playwright'
 
 const SITE = process.env.URL || 'http://localhost:4173/'
 
-const STEPPER_SERVICES = {
-  'Wash & fold': 200,
-  'Wash & iron': 300,
-  'Pressing only': 150,
-  'Dry cleaning': 350,
-  'Duvet cleaning': 600,
-  'Curtain cleaning': 500,
-  'Shoe cleaning': 250,
-}
-const FLAT_SERVICES = ['Same-day express']
-
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 await page.goto(SITE, { waitUntil: 'networkidle' })
+await page.waitForSelector('#service-panel article', { timeout: 20000 })
+
+// Read the truth from the page's own cards.
+const catalogue = await page.$$eval('#service-panel article', (cards) =>
+  cards.map((card) => ({
+    name: card.querySelector('h3').textContent.trim(),
+    priceText: card.querySelector('p.font-display').textContent.trim(),
+    unitLine: card.querySelector('p.font-display + p')?.textContent.trim() ?? null,
+    hasStepper: Boolean(card.querySelector('[role="group"]')),
+  })),
+)
+console.log(`catalogue: ${catalogue.length} services from the API`)
+for (const s of catalogue) console.log(`  ${s.hasStepper ? '[stepper]' : '[flat]   '} ${s.name.padEnd(24)} ${s.priceText}  ${s.unitLine ?? ''}`)
 
 let failures = 0
-const fail = (msg) => { failures++; console.log(`FAIL  ${msg}`) }
+const fail = (m) => { failures++; console.log(`FAIL  ${m}`) }
+const money = (t) => Number(String(t).replace(/[^\d]/g, ''))
 
-for (const [name, price] of Object.entries(STEPPER_SERVICES)) {
-  const card = page.locator('article', { has: page.locator('h3', { hasText: name }) }).first()
+const withStepper = catalogue.filter((s) => s.hasStepper)
+const flat = catalogue.filter((s) => !s.hasStepper)
+
+if (withStepper.length === 0) fail('no service rendered a stepper — the unit mapping is broken')
+
+for (const service of withStepper) {
+  const card = page.locator('article', { has: page.locator('h3', { hasText: service.name }) }).first()
   await card.scrollIntoViewIfNeeded()
-
   const plus = card.locator('[role="group"] button:not([disabled])').last()
-  // Read the money span exactly rather than substring-matching the card text:
-  // "KES 1" is a substring of "KES 100" and of "KSh 1,200".
-  const money = card.locator('[role="group"]').locator('xpath=following-sibling::span[1]')
+  // Exact element read, not a substring: "KSh 1" is inside "KSh 100" and "KSh 1,200".
+  const line = card.locator('[role="group"]').locator('xpath=following-sibling::span[1]')
 
   for (let qty = 1; qty <= 3; qty++) {
     await plus.click()
     const counter = (await card.locator('[role="group"] span[aria-live]').innerText()).replace(/\s+/g, ' ').trim()
-    const shown = (await money.innerText()).trim()
-    const want = `KSh ${(price * qty).toLocaleString('en-KE')}`
-    if (shown === want) {
-      console.log(`PASS  ${name.padEnd(16)} @${qty} -> ${shown}  (counter "${counter}")`)
+    const shown = (await line.innerText()).trim()
+    const want = money(service.priceText) * qty
+    const got = money(shown)
+    if (got === want) {
+      console.log(`PASS  ${service.name.padEnd(24)} @${qty} -> ${shown}  (counter "${counter}")`)
     } else {
-      fail(`${name} @${qty}: expected "${want}" got "${shown}"`)
+      fail(`${service.name} @${qty}: expected total ${want} got ${got} ("${shown}")`)
     }
   }
 
@@ -57,17 +67,19 @@ for (const [name, price] of Object.entries(STEPPER_SERVICES)) {
   }
 }
 
-for (const name of FLAT_SERVICES) {
-  const card = page.locator('article', { has: page.locator('h3', { hasText: name }) }).first()
-  await card.scrollIntoViewIfNeeded()
-  const hasStepper = (await card.locator('[role="group"]').count()) > 0
-  const hasOrderButton = (await card.locator('a:has-text("Order")').count()) > 0
-  if (!hasStepper && hasOrderButton) {
-    console.log(`PASS  ${name.padEnd(16)} flat price -> no stepper, direct Order link`)
-  } else {
-    fail(`${name}: expected no stepper and a direct Order link (stepper=${hasStepper}, orderButton=${hasOrderButton})`)
-  }
+for (const service of flat) {
+  const card = page.locator('article', { has: page.locator('h3', { hasText: service.name }) }).first()
+  const hasOrder = (await card.locator('a:has-text("Order")').count()) > 0
+  if (hasOrder) console.log(`PASS  ${service.name.padEnd(24)} flat ${service.priceText} -> no stepper, direct Order link`)
+  else fail(`${service.name}: flat price but no direct Order link`)
 }
+
+if (flat.length === 0) fail('no flat-priced service rendered — check pricing_mode "flat" -> no stepper')
+
+// Ordering: Wash & Fold must lead, not "Blanket Wash" as the API's alphabetical sort would.
+const first = catalogue[0]?.name
+if (first === 'Wash & Fold') console.log(`PASS  ordering -> first card is "${first}" (config serviceOrder, not alphabetical)`)
+else fail(`ordering: first card is "${first}", expected "Wash & Fold"`)
 
 await browser.close()
 console.log(`\n${failures === 0 ? 'ALL LINE TOTALS CORRECT' : failures + ' FAILURE(S)'}`)

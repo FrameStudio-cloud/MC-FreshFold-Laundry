@@ -130,210 +130,110 @@ export const business = {
       'Pick a service, set how much you have, and send the whole thing to us on WhatsApp in one tap.', // [REPLACE]
   },
   /**
-   * Category ids must match an id in `categories` below. The "All" pill is
-   * generated automatically — do not add it here.
+   * Filter groups, in the order the pills appear.
+   *
+   * These are groups of the shop's services, NOT the `category` column in the
+   * database. That column is free text with no constraint, and every service in
+   * this shop sits in a single value ("laundry"), so it cannot drive a filter
+   * without seventeen manual edits and no way to stop someone typing "Laundry"
+   * next to "laundry". Grouping lives here instead; the database owns the facts
+   * (name, price, unit) and this owns the presentation.
+   *
+   * A group with no services is not rendered, so leaving a group here while
+   * the shop does not offer it is harmless.
    */
   categories: [
     { id: 'wash', label: 'Wash & fold' },
-    { id: 'dry-clean', label: 'Dry clean' },
     { id: 'ironing', label: 'Ironing' },
+    { id: 'dry-clean', label: 'Dry clean' },
     { id: 'home', label: 'Home items' },
     { id: 'shoes', label: 'Shoes' },
     { id: 'express', label: 'Express' },
   ],
 
   /**
-   * `unit` is the thing the +/- buttons count. This is the single most
-   * important field on a laundry site: a shirt is counted as an item, a
-   * duvet load is counted in kg, dry cleaning is counted per piece.
-   *   'kg'    -> stepper label reads "kg"
-   *   'item'  -> stepper label reads "items"
-   *   'job'   -> whole jobs; stepper label reads "jobs"
-   *   null    -> stepper is hidden and the card shows "Add" only (flat pricing)
+   * Display order for the whole catalogue.
    *
-   * `price` is a NUMBER in the shop's currency. The "From" wording comes from the
-   * `pricePrefix` field, so the unit and the wording never disagree.
+   * /api/services orders by `category, name`, which is alphabetical — that
+   * puts "Blanket Wash" first and "Wash & Fold" in the middle. The route takes
+   * no ?order= parameter, so the order has to live here.
+   *
+   * Names must match the shop's service names EXACTLY, including the em dash in
+   * "Dry Clean — Shirt". A name that does not match is not dropped: it falls
+   * back to a default icon, its category's group, and the end of the list. So a
+   * typo costs a default icon, never a missing service.
+   *
+   * Anything missing from this list is still rendered, appended in the order the
+   * API returned it. Adding a service in Keel makes it appear without a deploy;
+   * this list only decides where it sits.
    */
-  /**
-   * These seven mirror real rows in the shop's `services` table, at the prices
-   * the shop actually charges. The database holds 17; the remainder (blankets,
-   * rugs, leather, wedding dresses, stain removal) are the natural next slice
-   * once the catalogue is driven by the API.
-   *
-   * `unit` is the thing the +/- buttons count. This is the single most
-   * important field on a laundry site: a shirt is counted as an item, a duvet
-   * load is counted in kg, dry cleaning is counted per piece.
-   *   'kg'    -> stepper label reads "kg"
-   *   'item'  -> stepper label reads "items"
-   *   'pair'  -> stepper label reads "pair"
-   *   null    -> stepper is hidden and the card shows "Order" only (flat pricing)
-   *
-   * `price` is a NUMBER in KSh. The "From" wording comes from `pricePrefix`, so
-   * the unit and the wording never disagree.
-   */
-  services: [
-    {
-      id: 'wash-fold',
-      category: 'wash',
-      name: 'Wash & fold',
-      icon: 'washing',
-      description:
-        'Your everyday load, washed at 30°C, dried and folded. Sorted by colour so nothing bleeds onto anything else.',
-      price: 200,
-      pricePrefix: '',
-      unit: 'kg',
-      priceNote: 'per kg. Minimum 3 kg.',
-      turnaround: '24–48 hours',
-      popular: true,
-    },
-    {
-      id: 'wash-iron',
-      category: 'wash',
-      name: 'Wash & iron',
-      icon: 'wind',
-      description:
-        'Washed, dried and pressed, ready to hang. The most-booked service for shirts and office wear.',
-      price: 300,
-      pricePrefix: '',
-      unit: 'kg',
-      priceNote: 'per kg. Minimum 3 kg.',
-      turnaround: '24–48 hours',
-    },
-    {
-      id: 'pressing',
-      category: 'ironing',
-      name: 'Pressing only',
-      icon: 'flame',
-      description:
-        'Already clean, just creased. We press it properly — collars, cuffs and plackets included, not just the flat bits.',
-      price: 150,
-      pricePrefix: '',
-      unit: 'item',
-      priceNote: 'per garment. Minimum 5 items.',
-      turnaround: 'Same day',
-    },
-    {
-      id: 'dry-clean',
-      category: 'dry-clean',
-      name: 'Dry cleaning',
-      icon: 'sparkles',
-      description:
-        'Real solvent cleaning for suits, dresses, jackets and gowns. Garment comes back pressed, with the shape intact.',
-      price: 350,
-      pricePrefix: 'From',
-      unit: 'item',
-      priceNote: 'per item. Shirt KSh 350, jacket 500, dress 600, suit 800.',
-      turnaround: '3–5 days',
-    },
-    {
-      id: 'duvets',
-      category: 'home',
-      name: 'Duvet cleaning',
-      icon: 'bed',
-      description:
-        'Duvets washed, dried and fluffed. We check for tears first and tell you before we start.',
-      price: 600,
-      pricePrefix: '',
-      unit: 'item',
-      priceNote: 'per duvet.',
-      turnaround: '2–3 days',
-    },
-    {
-      id: 'curtains',
-      category: 'home',
-      name: 'Curtain cleaning',
-      icon: 'curtain',
-      description:
-        'Curtains washed and pressed per kilogram. Heavy fabrics go in a larger drum so they come out evenly clean.',
-      price: 500,
-      pricePrefix: '',
-      unit: 'kg',
-      priceNote: 'per kg. Minimum 4 kg.',
-      turnaround: '2–3 days',
-    },
-    {
-      id: 'shoes',
-      category: 'shoes',
-      name: 'Shoe cleaning',
-      icon: 'shoe',
-      description:
-        'Sneakers, boots and leather cleaned inside and out, air dried in a controlled cabinet — never in direct sun.',
-      price: 250,
-      pricePrefix: '',
-      unit: 'pair',
-      priceNote: 'per pair.',
-      turnaround: '2 days',
-    },
-    {
-      id: 'express',
-      category: 'express',
-      name: 'Same-day express',
-      icon: 'bolt',
-      description:
-        'Priority queue for wash & fold and pressing. Send your list early in the morning and it comes back the same day.',
-      price: 500,
-      pricePrefix: '',
-      unit: null,
-      priceNote: 'flat surcharge, same-day collection.',
-      turnaround: 'Same day',
-      accent: true,
-    },
+  serviceOrder: [
+    'Wash & Fold',
+    'Wash & Iron',
+    'Pressing Only',
+    'Stain Removal',
+    'Express Service',
+    'Delicates Hand Wash',
+    'Blanket Wash',
+    'Dry Clean — Shirt',
+    'Dry Clean — Jacket',
+    'Dry Clean — Dress',
+    'Dry Clean — Suit',
+    'Leather Care',
+    'Wedding Dress Cleaning',
+    'Duvet Cleaning',
+    'Curtain Cleaning',
+    'Rug Cleaning',
+    'Shoe Cleaning',
   ],
 
+  /**
+   * Per-service presentation, keyed by the service name.
+   *
+   *   icon     a name from src/utils/icons.js
+   *   group    a `categories[].id` above
+   *   popular  adds a "Most booked" badge
+   *   accent   paints the card with the warm accent — use on at most one
+   *   note     small line under the price, e.g. a minimum order
+   *
+   * Everything not listed here still renders: default icon per group, no badge.
+   * Only the fields above can be set per service; name, description, price and
+   * the unit come from the database and must NOT be repeated here, or the page
+   * would show two different prices for the same thing.
+   */
+  servicePresentation: {
+    'Wash & Fold': { icon: 'washing', group: 'wash', popular: true },
+    'Wash & Iron': { icon: 'wind', group: 'wash' },
+    'Delicates Hand Wash': { icon: 'water', group: 'wash' },
+    'Blanket Wash': { icon: 'package', group: 'wash' },
+    'Pressing Only': { icon: 'flame', group: 'ironing' },
+    'Stain Removal': { icon: 'droplet', group: 'ironing' },
+    'Dry Clean — Shirt': { icon: 'shirt', group: 'dry-clean' },
+    'Dry Clean — Jacket': { icon: 'sun', group: 'dry-clean' },
+    'Dry Clean — Dress': { icon: 'sparkles', group: 'dry-clean' },
+    'Dry Clean — Suit': { icon: 'hanger', group: 'dry-clean' },
+    'Leather Care': { icon: 'shield', group: 'dry-clean' },
+    'Wedding Dress Cleaning': { icon: 'gem', group: 'dry-clean' },
+    'Duvet Cleaning': { icon: 'bed', group: 'home' },
+    'Curtain Cleaning': { icon: 'curtain', group: 'home' },
+    'Rug Cleaning': { icon: 'grid', group: 'home' },
+    'Shoe Cleaning': { icon: 'shoe', group: 'shoes' },
+    'Express Service': { icon: 'bolt', group: 'express', accent: true },
+  },
+
+
   // ---------------------------------------------------------------- price list
+  /**
+   * Copy only. The rows are DERIVED from the same /api/services response the
+   * service cards use, grouped by `categories`, so the page quotes one price
+   * per service in two places and they cannot disagree.
+   */
   priceList: {
     eyebrow: 'Straightforward pricing',
     title: 'What it costs, item by item',
     intro:
-      'Every price below matches the shop\'s live service list. We confirm the final total on WhatsApp before we start — no surprises at collection.',
-    note: 'Prices are [REPLACE as of Oct 2026] and include VAT.', // [REPLACE]
-    /**
-     * Groups become rounded tab targets, and each group becomes a card of
-     * rounded rows. Add, rename or delete groups freely.
-     */
-    groups: [
-      {
-        id: 'everyday',
-        label: 'Wash & press',
-        note: 'Collected from your door in {area}',
-        items: [
-          { name: 'Wash & fold, per kg', price: 200 },
-          { name: 'Wash & iron, per kg', price: 300 },
-          { name: 'Pressing only, per garment', price: 150 },
-          { name: 'Stain removal, per garment', price: 200 },
-        ],
-      },
-      {
-        id: 'special',
-        label: 'Dry cleaning',
-        note: 'Cleaned and pressed individually',
-        items: [
-          { name: 'Shirt', price: 350 },
-          { name: 'Jacket or blazer', price: 500 },
-          { name: 'Dress or gown', price: 600 },
-          { name: 'Suit', price: 800 },
-          { name: 'Leather jacket', price: 1200 },
-          { name: 'Wedding dress', price: 3500 },
-        ],
-      },
-      {
-        id: 'home',
-        label: 'Home items',
-        note: 'Bulky items, washed separately',
-        items: [
-          { name: 'Duvet', price: 600 },
-          { name: 'Curtains, per kg', price: 500 },
-          { name: 'Blanket, per item', price: 400 },
-          { name: 'Rug, small to medium', price: 800 },
-        ],
-      },
-      {
-        id: 'shoes',
-        label: 'Shoes',
-        note: 'Cleaned inside and out, air dried',
-        items: [{ name: 'Shoe cleaning, per pair', price: 250 }],
-      },
-    ],
+      'This is the same list we order from, updated whenever the shop changes a price. We confirm your total on WhatsApp before we start.',
+    note: 'Prices in the shop\'s own currency. Minimum orders, where they apply, are shown on the service card.', // [REPLACE]
   },
 
   // ---------------------------------------------------------------- how it works

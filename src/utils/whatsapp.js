@@ -96,7 +96,10 @@ export function orderWhatsAppLink(items) {
   const lines = items.map(({ service, qty }) => {
     const unit = unitNoun(service.unit)
     const each = service.unit ? ` @ ${formatKES(service.price)}/${unitNoun(service.unit, true)}` : ''
-    return `• ${service.name} — ${qty} ${unit}${each}`
+    // Parentheses, not a second dash: a service name can already contain an em
+    // dash ("Dry Clean — Shirt") and "Dry Clean — Shirt — 2 items" reads as
+    // though the name continues into the quantity.
+    return `• ${service.name} (${qty} ${unit}${each})`
   })
 
   const total = items.reduce((sum, i) => sum + i.service.price * i.qty, 0)
@@ -147,17 +150,22 @@ export function unitLabel(unit) {
   return { singular: unitNoun(unit, true), plural: unitNoun(unit) }
 }
 
-/** The price on its own, e.g. "From KES 150" — the headline a card renders. */
+/**
+ * The price on its own, e.g. "KSh 200".
+ *
+ * There is no "From" prefix. Every row in the shop's services table is an exact
+ * price for a named thing — a shirt is KSh 350, a duvet is KSh 600 — so a
+ * "From" would be a claim the database does not support. A service priced
+ * "from" something would need a new column, not a string prefix in the UI.
+ */
 export function priceHead(service) {
-  const amount = formatKES(service.price, business.currency)
-  return service.pricePrefix ? `${service.pricePrefix} ${amount}` : amount
+  return formatKES(service.price, business.currency)
 }
 
-/** Full price line including the note, e.g. "From KES 150 per kg. Minimum 3 kg."
- *  Used in outgoing WhatsApp text, where length costs nothing. */
+/** Full price line, e.g. "KSh 200 per kg". Used in outgoing WhatsApp text. */
 export function priceLine(service) {
   const head = priceHead(service)
-  if (service.priceNote) return `${head} ${service.priceNote}`
+  if (service.note) return `${head} — ${service.note}`
   if (service.unit) return `${head} per ${unitNoun(service.unit, true)}`
   return head
 }

@@ -31,6 +31,7 @@ await page.goto(SITE, { waitUntil: 'networkidle' })
 await page.waitForTimeout(8000)
 
 const settings = calls.filter((c) => c.startsWith('/api/settings'))
+const services = calls.filter((c) => c.startsWith('/api/services'))
 const faq = calls.filter((c) => c.includes('page-content'))
 const anyToken = tokenHeaders.some(Boolean)
 
@@ -38,6 +39,7 @@ console.log(`EXPECT_REMOTE = ${expectRemote}`)
 console.log('keel-api calls made :', calls.length ? calls.join('\n                       ') : '(none)')
 console.log('site token sent     :', anyToken)
 console.log('settings fetched    :', settings.length)
+console.log('services fetched    :', services.length)
 console.log('faq fetched         :', faq.length)
 
 const title = await page.title()
@@ -65,10 +67,11 @@ const check = (name, pass) => {
 
 if (expectRemote) {
   check('called /api/settings', settings.length === 1)
+  check('called /api/services', services.length === 1)
   check('called the faq page-content route', faq.length === 1)
   check('sent the site token header', anyToken)
   check('back-to-top rendered from feature_toggles', btt === 1)
-  check('total keel-api calls is 2', calls.length === 2)
+  check('total keel-api calls is 3', calls.length === 3)
 } else {
   check('made no keel-api calls', calls.length === 0)
   check('sent no token', !anyToken)

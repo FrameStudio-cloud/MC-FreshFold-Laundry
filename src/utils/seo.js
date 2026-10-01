@@ -80,19 +80,49 @@ export function buildJsonLd(url) {
       '@type': 'City',
       name: area,
     })),
-    makesOffer: business.services.map((service) => ({
-      '@type': 'Offer',
-      itemOffered: {
-        '@type': 'Service',
-        name: service.name,
-        description: service.description,
-      },
-      price: service.price,
-      priceCurrency: 'KES',
-    })),
+    // NOTE: no makesOffer here. The catalogue now comes from /api/services at
+    // runtime, so at build time there is no price to publish and inventing one
+    // would be a lie in the structured data. The offer list is merged in once the
+    // services have loaded - see applyServiceSchema().
   }
 
   if (business.email) data.email = business.email
 
   return data
+}
+
+/** Id of the JSON-LD script the build injects, so runtime can find it again. */
+export const SCHEMA_ID = 'keel-localbusiness'
+
+/**
+ * Merge the live service list into the page's JSON-LD.
+ *
+ * The build emits the LocalBusiness node without `makesOffer` because prices are
+ * not known until /api/services answers. This adds them once they are, so a
+ * crawler that executes JavaScript sees the real catalogue with real prices
+ * rather than whatever was true when the site was built.
+ *
+ * It UPDATES the existing script rather than adding a second one: two
+ * LocalBusiness nodes on a page is ambiguous, and some validators treat the
+ * duplicate as an error.
+ */
+export function applyServiceSchema(services) {
+  if (typeof document === 'undefined' || !services?.length) return
+
+  const script = document.getElementById(SCHEMA_ID)
+  if (!script) return
+
+  try {
+    const data = JSON.parse(script.textContent)
+    data.makesOffer = services.map((service) => ({
+      '@type': 'Offer',
+      itemOffered: { '@type': 'Service', name: service.name, description: service.description },
+      price: service.price,
+      priceCurrency: 'KSh',
+    }))
+    script.textContent = JSON.stringify(data)
+  } catch {
+    // A malformed script is not worth breaking the page over; the core
+    // LocalBusiness data is already in the HTML for a non-JS crawler.
+  }
 }

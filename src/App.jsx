@@ -16,6 +16,7 @@ import { WhatsAppFab } from './components/WhatsAppFab.jsx'
 import { BackToTop } from './components/BackToTop.jsx'
 import { useOrder } from './hooks/useOrder.js'
 import { useShopSettings } from './hooks/useShopSettings.js'
+import { useRemoteServices } from './hooks/useRemoteServices.js'
 
 /**
  * One page, in the order a visitor actually needs it:
@@ -30,12 +31,16 @@ import { useShopSettings } from './hooks/useShopSettings.js'
  */
 export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false)
-  const order = useOrder()
 
-  // Overlays shop identity (name, number, address, currency, hours) from
-  // keel-api onto the config. Deliberately not used to gate rendering: the
-  // config is already accurate, so this corrects rather than blocks.
+  // Three independent reads, each with its own fallback:
+  //   settings  overlays identity onto the config, which is already accurate
+  //   services  IS the catalogue, so it is held in state and threaded through
+  //   faq       overlays copy, config is the fallback
+  // The catalogue is not mutated into business.services: useOrder memoises over
+  // it, and a list replaced after that memo ran would leave the basket stale.
   const { toggles } = useShopSettings()
+  const catalogue = useRemoteServices()
+  const order = useOrder(catalogue.services)
 
   const openSheet = useCallback(() => setSheetOpen(true), [])
   const closeSheet = useCallback(() => setSheetOpen(false), [])
@@ -53,8 +58,14 @@ export default function App() {
 
       <main>
         <Hero onViewServices={() => document.getElementById('services')?.scrollIntoView({ block: 'start' })} />
-        <ServiceGrid order={order} onOpenOrder={openSheet} />
-        <PriceList />
+        <ServiceGrid
+          services={catalogue.services}
+          status={catalogue.status}
+          error={catalogue.error}
+          order={order}
+          onOpenOrder={openSheet}
+        />
+        <PriceList services={catalogue.services} status={catalogue.status} />
         <Steps />
         <Benefits />
         <Testimonials />

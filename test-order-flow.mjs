@@ -10,9 +10,10 @@ const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 360, height: 900 } })
 await page.goto(SITE, { waitUntil: 'networkidle' })
 
-// Wash & fold: +3 (kg). Dry cleaning: +2 (items). Shoe cleaning: +2 (pairs).
-// "Same-day express" is deliberately excluded: it is flat-priced and correctly
-// has no stepper, so it is reached through its own Order link instead.
+// Wash & Fold: +3 (kg). Dry Clean — Shirt: +2 (items). Shoe Cleaning: +2 (pairs).
+// Names must match the shop's own service names; the catalogue is the database's.
+// "Express Service" is deliberately excluded: it is flat-priced and correctly has
+// no stepper, so it is reached through its own Order link instead.
 async function bump(serviceName, times) {
   const card = page.locator('article', { has: page.locator('h3', { hasText: serviceName }) }).first()
   const group = card.locator('[role="group"]')
@@ -22,9 +23,9 @@ async function bump(serviceName, times) {
   }
 }
 
-await bump('Wash & fold', 3)
-await bump('Dry cleaning', 2)
-await bump('Shoe cleaning', 2)
+await bump('Wash & Fold', 3)
+await bump('Dry Clean — Shirt', 2)
+await bump('Shoe Cleaning', 2)
 
 // Open the sheet via the sticky mobile bar.
 await page.locator('button:has-text("Your order")').first().click()

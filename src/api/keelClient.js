@@ -78,6 +78,26 @@ async function get(path, { signal } = {}) {
 }
 
 /**
+ * The shop's published services.
+ *
+ * The route already filters `visible = true` (a soft delete: hiding a row
+ * unpublishes it without removing history, because past orders copied the
+ * service name and price onto their lines). It also returns only nine named
+ * columns — shop_id, visible and created_at are withheld.
+ *
+ * There is no fallback list in business.js. That is a deliberate decision:
+ * a hardcoded copy of the prices would be a SECOND source of price truth, and
+ * prices are precisely the data that must not quietly disagree with what the
+ * shop actually charges. If this fails the catalogue shows a message pointing at
+ * WhatsApp, which is where orders are taken anyway.
+ */
+export async function fetchServices({ signal } = {}) {
+  if (!hasToken) return null
+  const rows = await get('/api/services', { signal })
+  return Array.isArray(rows) ? rows : []
+}
+
+/**
  * The shop's own settings row: name, contacts, address, currency, hours.
  *
  * This is the only source of shop identity. The 19 returned columns are named

@@ -20,11 +20,20 @@ await page.goto(SITE, { waitUntil: 'networkidle' })
 // ---- category filter -------------------------------------------------------
 const titles = () => page.locator('#service-panel article h3').allTextContents()
 
-check('all services shown initially', (await titles()).length === 8, `${(await titles()).length} cards`)
+// Counts come from the live /api/services response, not a fixture. If the shop
+// adds or removes a service this test should notice rather than be updated.
+const ALL_SERVICES = Number(process.env.EXPECT_SERVICES || 17)
+const HOME_SERVICES = Number(process.env.EXPECT_HOME_SERVICES || 3)
+
+check('all services shown initially', (await titles()).length === ALL_SERVICES, `${(await titles()).length} cards`)
 
 await page.locator('#cat-home').click()
 const homeItems = await titles()
-check('filter "Home items" narrows the grid', homeItems.length === 2, homeItems.join(', '))
+check(
+  'filter "Home items" narrows the grid',
+  homeItems.length === HOME_SERVICES && homeItems.every((t) => /Duvet|Curtain|Rug/.test(t)),
+  homeItems.join(', '),
+)
 
 await page.locator('#cat-shoes').click()
 check('filter switches categories', (await titles()).length === 1, (await titles()).join(', '))
@@ -38,11 +47,15 @@ check('ArrowRight moves to next tab', focusedAfterArrow === 'cat-wash', `focus=$
 check('ArrowRight also selects it', allSelected === 'false', `all aria-selected=${allSelected}`)
 
 // ---- price list tabs are keyboard reachable --------------------------------
-await page.locator('#price-tab-everyday').focus()
+// Ids come from business.categories, in declaration order: wash, then ironing.
+await page.locator('#price-tab-wash').focus()
 await page.keyboard.press('ArrowRight')
 const priceFocus = await page.evaluate(() => document.activeElement?.id)
-const priceSelected = await page.locator('#price-tab-specialist-care, [id="price-tab-special"]').count()
-check('price list tabs respond to ArrowRight', priceFocus === 'price-tab-special', `focus=${priceFocus} (unselected tabs found: ${priceSelected})`)
+check('price list tabs respond to ArrowRight', priceFocus === 'price-tab-ironing', `focus=${priceFocus}`)
+const priceTabs = await page.locator('#pricing [role="tab"]').count()
+check('price list has more than one group', priceTabs > 1, `${priceTabs} groups`)
+const priceRows = await page.locator('#price-panel li').count()
+check('price rows derive from the catalogue', priceRows > 0, `${priceRows} rows in ${await page.locator('#price-tab-ironing').innerText()}`)
 
 // ---- FAQ accordion ---------------------------------------------------------
 const firstQ = page.locator('#faq button[aria-expanded]').first()

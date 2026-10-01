@@ -1,21 +1,26 @@
 import { useCallback, useMemo, useState } from 'react'
-import { business } from '../data/business.js'
 
 /**
  * The basket.
  *
  * A laundry service is not a product, so the basket stores { serviceId, qty }
- * against the config's service list rather than copying service objects. That
- * way editing a price in business.js updates the maths everywhere at once, and
- * there is no stale duplicate of the catalogue in state.
+ * against the catalogue rather than copying service objects. That way a price
+ * change in the database updates the maths everywhere at once, and there is no
+ * stale duplicate of the catalogue in state.
  *
- * Quantity means whatever the service's `unit` says — kilograms for wash &
- * fold, items for dry cleaning. Not everything gets a stepper.
+ * Quantity means whatever the service's `unit` says — kilograms for wash & fold,
+ * items for dry cleaning, pairs for shoes. Flat-priced services have no unit and
+ * no stepper.
+ *
+ * The catalogue is passed IN rather than read from business.services, and it is
+ * in the memo deps. The services list arrives asynchronously from keel-api, so a
+ * memo keyed only on `lines` would keep iterating whichever list existed at the
+ * time the last quantity changed — and quantities added before the fetch landed
+ * would silently vanish from the drawer.
  */
-
 const MAX_QTY = 99
 
-export function useOrder() {
+export function useOrder(services = []) {
   const [lines, setLines] = useState(() => new Map())
 
   const commit = useCallback((serviceId, next) => {
@@ -48,12 +53,12 @@ export function useOrder() {
    *  drawer does not reshuffle when a quantity changes. */
   const items = useMemo(() => {
     const out = []
-    for (const service of business.services) {
+    for (const service of services) {
       const qty = lines.get(service.id)
       if (qty) out.push({ service, qty })
     }
     return out
-  }, [lines])
+  }, [lines, services])
 
   const total = useMemo(
     () => items.reduce((sum, { service, qty }) => sum + service.price * qty, 0),
@@ -65,7 +70,10 @@ export function useOrder() {
   return {
     items,
     total,
-    count: lines.size,
+    // items.length, not lines.size: a line survives in state even if its
+    // service disappears from a later refetch, and a badge counting something
+    // the drawer cannot show is a small lie.
+    count: items.length,
     qtyOf,
     setQty: commit,
     step,

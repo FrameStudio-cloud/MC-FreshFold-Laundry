@@ -43,7 +43,10 @@ export function BackToTop({ enabled = false, chatEnabled = true }) {
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
       className={`press fixed right-4 z-40 grid h-12 w-12 place-items-center rounded-full border border-primary-100 bg-surface text-ink shadow-lift hover:bg-primary-50 md:right-6 ${
-        chatEnabled ? 'bottom-[10.5rem]' : 'bottom-[5.5rem] md:bottom-6'
+        // Mobile stacks three things bottom-right: the order bar, the WhatsApp
+        // float, and this. Desktop drops the order bar, so the stack is only
+        // two deep and this can sit lower - where it covers less page content.
+        chatEnabled ? 'bottom-[10.5rem] md:bottom-24' : 'bottom-[5.5rem] md:bottom-6'
       } transition-opacity duration-300 ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
     >
       <ArrowUp size={20} aria-hidden="true" />

@@ -4,11 +4,11 @@
    so the resolved component's identity is identical on every render and it
    holds no state. The rule cannot see through the lookup. The same pattern in
    Hero/Steps/Benefits is inside a .map() callback and is not flagged. */
-import { Minus, Plus, Timer } from 'lucide-react'
+import { Minus, Plus } from 'lucide-react'
 import { business } from '../data/business.js'
 import { formatKES } from '../utils/format.js'
 import { getIcon } from '../utils/icons.js'
-import { priceHead, priceLine, unitLabel } from '../utils/whatsapp.js'
+import { priceHead, priceLine, unitLabel, unitNoun } from '../utils/whatsapp.js'
 
 /**
  * One service card.
@@ -58,26 +58,23 @@ export function ServiceCard({ service, qty, onStep, popular }) {
 
       <p className="mt-2.5 flex-1 text-[0.9375rem] leading-relaxed text-ink-body">{service.description}</p>
 
-<div className="mt-5">
-          {/* Price and its note are separate elements on purpose: joining them
-              ("From KES 900 per item. Suits quoted per piece.") makes one long
-              line that wraps and destroys the price as a scannable anchor. */}
-          <p
-            className={`font-display text-2xl font-extrabold leading-tight ${
-              isAccent ? 'text-accent-700' : 'text-primary-700'
-            }`}
-          >
-            {priceHead(service)}
-          </p>
-          {service.priceNote ? <p className="mt-1 text-sm text-ink-muted">{service.priceNote}</p> : null}
-        </div>
-
-      {service.turnaround ? (
-        <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-ink-muted">
-          <Timer size={15} aria-hidden="true" />
-          {service.turnaround}
+      <div className="mt-5">
+        {/* Price and its unit are separate elements on purpose: joining them
+            makes one long line that wraps and destroys the price as a
+            scannable anchor. The unit comes from the database's unit_label, so
+            it cannot disagree with what the stepper counts. */}
+        <p
+          className={`font-display text-2xl font-extrabold leading-tight ${
+            isAccent ? 'text-accent-700' : 'text-primary-700'
+          }`}
+        >
+          {priceHead(service)}
         </p>
-      ) : null}
+        {service.unit ? (
+          <p className="mt-1 text-sm text-ink-muted">per {unitNoun(service.unit, true)}</p>
+        ) : null}
+        {service.note ? <p className="mt-1 text-sm text-ink-muted">{service.note}</p> : null}
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         {service.unit ? (
