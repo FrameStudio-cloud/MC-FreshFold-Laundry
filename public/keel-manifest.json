@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "pages": {
+    "faq": {
+      "label": "FAQ",
+      "description": "Questions customers ask before their first wash",
+      "icon": "faq",
+      "sections": [
+        {
+          "key": "items",
+          "label": "Questions & Answers",
+          "description": "Shown in the FAQ accordion on the site. The first question is open by default.",
+          "fields": [
+            {
+              "key": "items",
+              "type": "array",
+              "label": "FAQ Items",
+              "description": "Add, reorder or remove questions. The order here is the order on the site.",
+              "addLabel": "Add Question",
+              "itemFields": [
+                {
+                  "key": "question",
+                  "type": "text",
+                  "label": "Question",
+                  "placeholder": "How long does a wash & fold take?"
+                },
+                {
+                  "key": "answer",
+                  "type": "textarea",
+                  "label": "Answer",
+                  "placeholder": "One or two sentences. Plain language."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
