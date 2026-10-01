@@ -113,7 +113,11 @@ export function Navbar({ onOpenOrder }) {
         </a>
 
         <nav aria-label="Sections" className="hidden lg:block">
-          <ul className="flex items-center gap-1">
+          {/* Tighter at lg, comfortable from xl. Six links plus a button do not
+              fit at 1024px with roomy padding, and the links were wrapping to
+              two lines — which reads as a broken layout, not a tight one.
+              whitespace-nowrap is the guard; the padding is the relief. */}
+          <ul className="flex items-center gap-0.5 xl:gap-1">
             {business.nav.map((link) => {
               const id = link.href.slice(1)
               const isActive = active === id
@@ -122,7 +126,7 @@ export function Navbar({ onOpenOrder }) {
                   <a
                     href={link.href}
                     aria-current={isActive ? 'true' : undefined}
-                    className={`press relative block rounded-full px-4 py-2.5 text-[0.9375rem] font-medium transition-colors ${
+                    className={`press relative block whitespace-nowrap rounded-full px-3 py-2.5 text-[0.9375rem] font-medium transition-colors xl:px-4 ${
                       isActive ? 'bg-primary-100 text-primary-800' : 'text-ink-body hover:bg-primary-50 hover:text-primary-700'
                     }`}
                   >
@@ -139,7 +143,7 @@ export function Navbar({ onOpenOrder }) {
             href={waHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="press hidden items-center gap-2 rounded-full bg-whatsapp px-5 py-3 text-[0.9375rem] font-semibold text-white shadow-soft hover:bg-whatsapp-hover sm:inline-flex"
+            className="press hidden items-center gap-2 whitespace-nowrap rounded-full bg-whatsapp px-5 py-3 text-[0.9375rem] font-semibold text-white shadow-soft hover:bg-whatsapp-hover sm:inline-flex"
           >
             <WhatsAppIcon size={18} />
             {business.navOrderLabel ?? 'Order now'}
@@ -193,7 +197,7 @@ export function Navbar({ onOpenOrder }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="press mt-4 flex items-center justify-center gap-2 rounded-full bg-whatsapp px-6 py-4 text-base font-semibold text-white shadow-soft"
+            className="press mt-4 flex items-center justify-center gap-2 whitespace-nowrap rounded-full bg-whatsapp px-6 py-4 text-base font-semibold text-white shadow-soft"
           >
             <WhatsAppIcon size={20} />
             {business.navOrderLabel ?? 'Order now'}
