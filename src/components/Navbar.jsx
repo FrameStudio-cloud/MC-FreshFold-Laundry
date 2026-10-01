@@ -1,0 +1,236 @@
+import { useEffect, useRef, useState } from 'react'
+import { Menu, X } from 'lucide-react'
+import { business } from '../data/business.js'
+import { whatsappLink } from '../utils/whatsapp.js'
+import { fillTokens } from '../utils/format.js'
+import { WhatsAppIcon } from './BrandIcons.jsx'
+
+/**
+ * Sticky header.
+ *
+ * Two pieces of real behaviour here rather than decoration:
+ *   - the mobile menu traps Tab, closes on Escape, and returns focus to the
+ *     button that opened it. Without that it is unusable by keyboard, which is
+ *     the most common failure in a nav like this.
+ *   - scroll-spy marks the section you are reading with aria-current, so the
+ *     state is exposed to assistive tech and not only to sighted users.
+ */
+export function Navbar({ onOpenOrder }) {
+  const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [active, setActive] = useState('')
+
+  const toggleRef = useRef(null)
+  const panelRef = useRef(null)
+  const waHref = whatsappLink()
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Close the panel whenever the viewport grows past the mobile breakpoint,
+  // otherwise it stays mounted behind the desktop layout.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const sync = () => mq.matches && setOpen(false)
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+
+    const onKey = (event) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        toggleRef.current?.focus()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const focusable = panelRef.current?.querySelectorAll('a[href], button:not([disabled])')
+      if (!focusable?.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  // Highlight the section occupying the upper third of the viewport.
+  useEffect(() => {
+    const sections = business.nav
+      .map((link) => document.getElementById(link.href.slice(1)))
+      .filter(Boolean)
+    if (!sections.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        if (visible[0]) setActive(visible[0].target.id)
+      },
+      { rootMargin: '-20% 0px -65% 0px', threshold: 0 },
+    )
+
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
+
+  const tokens = { area: business.area, city: business.city, name: business.name }
+
+  return (
+    <header
+      className={`sticky top-0 z-50 transition-[background-color,box-shadow,border-color] duration-300 ${
+        scrolled || open
+          ? 'border-b border-primary-100/80 bg-canvas/90 shadow-soft backdrop-blur-xl'
+          : 'border-b border-transparent bg-canvas/60 backdrop-blur-sm'
+      }`}
+    >
+      <div className="container-x flex h-20 items-center justify-between gap-4">
+        <a href="#top" className="press group flex items-center gap-3 rounded-full" aria-label={`${business.name} home`}>
+          <Logo />
+          <span className="flex flex-col leading-none">
+            <span className="font-display text-lg font-extrabold tracking-tight text-ink">{business.name}</span>
+            {/* Hidden on the narrowest phones: at 360px the tagline wraps to two
+                lines and makes the sticky header noticeably taller. */}
+            <span className="mt-1 hidden text-[0.6875rem] font-medium tracking-wide text-ink-muted sm:block">
+              {fillTokens(business.tagline.split('.')[0], tokens)}
+            </span>
+          </span>
+        </a>
+
+        <nav aria-label="Sections" className="hidden lg:block">
+          <ul className="flex items-center gap-1">
+            {business.nav.map((link) => {
+              const id = link.href.slice(1)
+              const isActive = active === id
+              return (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    aria-current={isActive ? 'true' : undefined}
+                    className={`press relative block rounded-full px-4 py-2.5 text-[0.9375rem] font-medium transition-colors ${
+                      isActive ? 'bg-primary-100 text-primary-800' : 'text-ink-body hover:bg-primary-50 hover:text-primary-700'
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="press hidden items-center gap-2 rounded-full bg-whatsapp px-5 py-3 text-[0.9375rem] font-semibold text-white shadow-soft hover:bg-whatsapp-hover sm:inline-flex"
+          >
+            <WhatsAppIcon size={18} />
+            {business.navOrderLabel ?? 'Order now'}
+          </a>
+
+          <button
+            ref={toggleRef}
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            className="press inline-flex h-12 w-12 items-center justify-center rounded-full border border-primary-200 bg-surface text-ink shadow-soft hover:bg-primary-50 lg:hidden"
+          >
+            <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile panel. Rendered, not conditionally mounted, so the open/close
+          transition can play. */}
+      <div
+        id="mobile-menu"
+        ref={panelRef}
+        hidden={!open}
+        className="border-t border-primary-100 bg-canvas/95 backdrop-blur-xl lg:hidden"
+      >
+        <nav aria-label="Sections" className="container-x py-5">
+          <ul className="flex flex-col gap-1.5">
+            {business.nav.map((link) => {
+              const id = link.href.slice(1)
+              const isActive = active === id
+              return (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={isActive ? 'true' : undefined}
+                    className={`press flex items-center justify-between rounded-2xl px-5 py-3.5 text-base font-semibold ${
+                      isActive ? 'bg-primary-100 text-primary-800' : 'bg-surface text-ink shadow-soft'
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="press mt-4 flex items-center justify-center gap-2 rounded-full bg-whatsapp px-6 py-4 text-base font-semibold text-white shadow-soft"
+          >
+            <WhatsAppIcon size={20} />
+            {business.navOrderLabel ?? 'Order now'}
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false)
+              onOpenOrder?.()
+            }}
+            className="press mt-2.5 flex w-full items-center justify-center gap-2 rounded-full border border-primary-200 bg-surface px-6 py-4 text-base font-semibold text-ink"
+          >
+            {business.order.drawerOpenLabel}
+          </button>
+        </nav>
+      </div>
+    </header>
+  )
+}
+
+/**
+ * Wordmark. A stack of three folded layers in the brand aqua — specific to a
+ * laundry rather than a generic circle-and-text logo.
+ */
+function Logo() {
+  return (
+    <span
+      aria-hidden="true"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-600 shadow-soft transition-transform duration-300 group-hover:rotate-6"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="12.5" width="16" height="4.5" rx="2.25" fill="#ecfaf8" />
+        <rect x="5.5" y="8" width="13" height="4" rx="2" fill="#a5e5df" />
+        <rect x="7" y="3.5" width="10" height="4" rx="2" fill="#fb6540" />
+        <circle cx="18.5" cy="4.5" r="1.6" fill="#ffe5dc" />
+        <circle cx="3.4" cy="7" r="1.1" fill="#ffe5dc" />
+      </svg>
+    </span>
+  )
+}

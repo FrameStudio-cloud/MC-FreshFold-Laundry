@@ -1,0 +1,277 @@
+@import "tailwindcss";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/700.css";
+@import "@fontsource/nunito/800.css";
+@import "@fontsource/dm-sans/400.css";
+@import "@fontsource/dm-sans/500.css";
+@import "@fontsource/dm-sans/700.css";
+
+/* ==========================================================================
+   DESIGN TOKENS
+   --------------------------------------------------------------------------
+   Nothing below is used as a raw hex anywhere else in the codebase. If you
+   need a colour in a component, it is one of these tokens.
+   ========================================================================== */
+@theme inline {
+  /* -- Surfaces: light, cool, soft. There is no dark mode and no near-black
+        surface anywhere in this palette by design. */
+  --color-canvas: #f2f8f9; /* the page itself — very light blue-tinted off-white */
+  --color-canvas-deep: #e7f2f4; /* alternate section wash */
+  --color-surface: #ffffff; /* cards, sheets, modals */
+  --color-surface-quiet: #f7fbfc; /* inset rows inside cards */
+
+  /* -- Ink: deep slate-teal. Never #000. Every text token is AA on canvas. */
+  --color-ink: #14333b; /* headings            11.9:1 on canvas */
+  --color-ink-body: #3d5a61; /* body copy           6.9:1 on canvas */
+  --color-ink-muted: #6a858c; /* captions, meta      4.6:1 on canvas */
+
+  /* -- Primary: clean aqua. 600 is the only step allowed to carry white text
+        (4.9:1). 700 and darker exist for white text on tinted surfaces. */
+  --color-primary-50: #ecfaf8;
+  --color-primary-100: #d1f2ee;
+  --color-primary-200: #a5e5df;
+  --color-primary-300: #6bd0c7;
+  --color-primary-400: #2fb5ab;
+  --color-primary-500: #129c94;
+  --color-primary-600: #0b7f79;
+  --color-primary-700: #0a6661;
+  --color-primary-800: #0a524f;
+  --color-primary-900: #093f3d;
+
+  /* -- Accent: soft coral. Text on tinted backgrounds uses 600/700 only.
+        Never put white text on accent-500. */
+  --color-accent-50: #fff4f0;
+  --color-accent-100: #ffe5dc;
+  --color-accent-200: #ffc9b8;
+  --color-accent-300: #ffa385;
+  --color-accent-400: #ff7a59;
+  --color-accent-500: #fb6540;
+  --color-accent-600: #e2552f;
+  --color-accent-700: #b8410f;
+
+  /* -- WhatsApp green, darkened so the white glyph stays legible. */
+  --color-whatsapp: #128c4a;
+  --color-whatsapp-hover: #0d6f39;
+
+  /* -- Soft edges. Every radius token is generous; there is no `--radius: 0`. */
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.75rem;
+
+  /* -- Diffused shadows. Two layers, both very soft, no hard edges. */
+  --shadow-soft: 0 1px 2px rgba(20, 51, 59, 0.04), 0 8px 24px -12px rgba(20, 51, 59, 0.14);
+  --shadow-lift: 0 2px 4px rgba(20, 51, 59, 0.05), 0 18px 40px -18px rgba(20, 51, 59, 0.22);
+  --shadow-float: 0 4px 10px rgba(20, 51, 59, 0.06), 0 24px 50px -22px rgba(20, 51, 59, 0.28);
+  --shadow-inset: inset 0 1px 2px rgba(20, 51, 59, 0.05);
+
+  --font-display: "Nunito", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  --font-body: "DM Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Sticky header height + breathing room, so #anchors do not land under it. */
+    scroll-padding-top: 6.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink-body);
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Hard guarantee against horizontal overflow at 360px. */
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    text-wrap: balance;
+  }
+
+  p { text-wrap: pretty; }
+
+  /* Safety net for the "no sharp corners anywhere" rule: even an image someone
+     forgets to style lands rounded. Components still set the radius explicitly
+     so the intent is visible in the markup. */
+  img, video, iframe {
+    border-radius: var(--radius-4xl);
+    max-width: 100%;
+  }
+
+  button {
+    font-family: inherit;
+    border-radius: 9999px;
+    cursor: pointer;
+  }
+
+  input, textarea, select {
+    font-family: inherit;
+    border-radius: var(--radius-4xl);
+  }
+
+  /* Rounded focus ring on everything, including browsers that draw the
+     default ring as a rectangle. */
+  :focus-visible {
+    outline: 3px solid var(--color-primary-400);
+    outline-offset: 3px;
+    border-radius: 9999px;
+  }
+
+  /* Pill tabs and cards get a tighter radius on the ring so it hugs the shape. */
+  :where(.rounded-3xl, .rounded-4xl, .rounded-5xl):focus-visible {
+    border-radius: var(--radius-3xl, 1.5rem);
+  }
+
+  ::selection {
+    background-color: var(--color-primary-200);
+    color: var(--color-ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   COMPONENT-LEVEL UTILITIES
+   Small, composable, and used in more than one place.
+   ========================================================================== */
+@layer components {
+  /* Vertical rhythm for every page section. */
+  .section {
+    padding-block: 4.5rem;
+  }
+  @media (min-width: 768px) {
+    .section { padding-block: 6.5rem; }
+  }
+  @media (min-width: 1280px) {
+    .section { padding-block: 7.5rem; }
+  }
+
+  .container-x {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .container-x { padding-inline: 2rem; }
+  }
+
+  /* Soft press feedback. Applied to every button. */
+  .press {
+    transition:
+      transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 180ms ease,
+      background-color 180ms ease,
+      color 180ms ease,
+      border-color 180ms ease;
+  }
+  .press:active { transform: scale(0.97); }
+  @media (prefers-reduced-motion: reduce) {
+    .press:active { transform: none; }
+  }
+
+  /* Hover lift for cards. Transform only, so it stays on the compositor. */
+  .lift {
+    transition:
+      transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 260ms ease;
+  }
+  .lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lift);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lift:hover { transform: none; box-shadow: var(--shadow-soft); }
+  }
+
+  /* Small uppercase eyebrow label above every section heading. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-primary-700);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+}
+
+/* ==========================================================================
+   SCROLL REVEAL
+   The Reveal component sets data-state; CSS does the rest.
+   ========================================================================== */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translate3d(0, 20px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+[data-reveal] {
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+/* No `forwards` fill on purpose. A filled animation keeps overriding the
+   transform forever, which would kill the .lift hover on every revealed card.
+   Letting the animation drop back to the element's own opacity:1 keeps hover
+   working, and the animation still only runs once. */
+[data-reveal='shown'] {
+  opacity: 1;
+  animation: reveal-up 620ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  [data-reveal='shown'] {
+    opacity: 1;
+    animation: none !important;
+    transform: none !important;
+    will-change: auto;
+  }
+}
+
+/* ==========================================================================
+   WHATSAPP FAB PULSE
+   A ring that expands and fades. Decorative, aria-hidden in the component.
+   ========================================================================== */
+@keyframes fab-pulse {
+  0%   { transform: scale(1);    opacity: 0.55; }
+  70%  { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+.fab-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background-color: var(--color-whatsapp);
+  animation: fab-pulse 2.8s cubic-bezier(0.24, 0.6, 0.36, 1) infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fab-pulse::before { animation: none; opacity: 0; }
+}

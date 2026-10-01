@@ -1,0 +1,68 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="hero-title">
+  <title id="hero-title">A neat stack of freshly folded laundry with soap bubbles</title>
+  <defs>
+    <linearGradient id="wash" x1="40" y1="20" x2="600" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBFDFE"/>
+      <stop offset="1" stop-color="#D8F1EF"/>
+    </linearGradient>
+    <linearGradient id="foldTop" x1="228" y1="262" x2="412" y2="322" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8E72"/>
+      <stop offset="1" stop-color="#F04E27"/>
+    </linearGradient>
+    <linearGradient id="foldMid" x1="190" y1="312" x2="452" y2="378" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EDF6F7"/>
+    </linearGradient>
+    <filter id="stackShadow" x="120" y="240" width="420" height="300" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#14333B" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <rect width="640" height="640" rx="76" fill="url(#wash)"/>
+  <circle cx="336" cy="322" r="212" fill="#D1F2EE"/>
+  <circle cx="336" cy="322" r="150" fill="#FFFFFF" fill-opacity="0.55"/>
+
+  <!-- Bubbles: three sizes, deliberately uneven. -->
+  <g>
+    <circle cx="132" cy="182" r="34" fill="#FFFFFF" fill-opacity="0.85" stroke="#A5E5DF" stroke-width="3"/>
+    <circle cx="163" cy="214" r="13" fill="#FFFFFF" fill-opacity="0.9" stroke="#A5E5DF" stroke-width="2.5"/>
+    <circle cx="512" cy="164" r="21" fill="#FFFFFF" fill-opacity="0.9" stroke="#A5E5DF" stroke-width="3"/>
+    <circle cx="486" cy="204" r="9" fill="#FFFFFF" fill-opacity="0.95" stroke="#A5E5DF" stroke-width="2"/>
+    <circle cx="96" cy="336" r="16" fill="#FFFFFF" fill-opacity="0.8" stroke="#A5E5DF" stroke-width="2.5"/>
+    <circle cx="556" cy="330" r="11" fill="#FFFFFF" fill-opacity="0.85" stroke="#A5E5DF" stroke-width="2"/>
+  </g>
+
+  <!-- Sparkles, echoing the CSS sparkle motif used on the cards. -->
+  <g fill="#6BD0C7">
+    <path d="M470 96c3 14 6 17 20 20-14 3-17 6-20 20-3-14-6-17-20-20 14-3 17-6 20-20Z"/>
+    <path d="M180 424c2 10 4 12 14 14-10 2-12 4-14 14-2-10-4-12-14-14 10-2 12-4 14-14Z" opacity="0.7"/>
+  </g>
+
+  <!-- The stack. Four folded items, each with a turned-back top edge. -->
+  <g filter="url(#stackShadow)">
+    <!-- Bottom: deep aqua -->
+    <rect x="168" y="432" width="304" height="66" rx="26" fill="#0B7F79"/>
+    <rect x="196" y="432" width="248" height="26" rx="13" fill="#129C94"/>
+
+    <!-- Third: white shirt stack -->
+    <rect x="186" y="374" width="268" height="60" rx="24" fill="#FFFFFF"/>
+    <rect x="212" y="374" width="216" height="24" rx="12" fill="#F0F7F8"/>
+
+    <!-- Second: mid aqua towel -->
+    <rect x="198" y="318" width="244" height="58" rx="23" fill="#6BD0C7"/>
+    <rect x="222" y="318" width="196" height="23" rx="11.5" fill="#A5E5DF"/>
+
+    <!-- Top: the coral accent piece, slightly rotated for life -->
+    <g transform="rotate(-4 320 272)">
+      <rect x="226" y="262" width="188" height="58" rx="23" fill="url(#foldTop)"/>
+      <rect x="248" y="262" width="144" height="23" rx="11.5" fill="#FFB49B"/>
+    </g>
+  </g>
+
+  <!-- Fabric fold creases. -->
+  <g stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="4" stroke-linecap="round">
+    <path d="M300 416h44"/>
+    <path d="M318 358h44"/>
+    <path d="M318 302h40"/>
+  </g>
+</svg>

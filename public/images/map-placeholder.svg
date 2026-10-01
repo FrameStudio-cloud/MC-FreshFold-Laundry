@@ -1,0 +1,47 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="map-title">
+  <title id="map-title">Stylised map showing the shop location and its delivery area</title>
+  <defs>
+    <linearGradient id="mapBg" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4FBFB"/>
+      <stop offset="1" stop-color="#E4F3F4"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#mapBg)"/>
+
+  <!-- Parks / blocks, soft and abstract. -->
+  <g fill="#D1F2EE">
+    <rect x="60" y="70" width="180" height="120" rx="40"/>
+    <rect x="560" y="90" width="170" height="140" rx="44"/>
+    <rect x="90" y="410" width="160" height="130" rx="42"/>
+    <rect x="600" y="420" width="140" height="120" rx="38"/>
+  </g>
+
+  <!-- Roads. Rounded caps so nothing ends in a hard edge. -->
+  <g stroke="#FFFFFF" stroke-width="22" stroke-linecap="round">
+    <path d="M-10 300h820"/>
+    <path d="M400 -10v620"/>
+    <path d="M-10 120C180 130 300 210 460 250s240 40 350 30"/>
+    <path d="M-10 480C160 470 280 400 430 370s250-10 380 20"/>
+  </g>
+  <g stroke="#A5E5DF" stroke-width="3" stroke-dasharray="14 16" stroke-linecap="round">
+    <path d="M-10 300h820"/>
+    <path d="M400 -10v620"/>
+  </g>
+
+  <!-- Delivery radius. -->
+  <circle cx="400" cy="300" r="188" fill="#129C94" fill-opacity="0.08"/>
+  <circle cx="400" cy="300" r="188" stroke="#129C94" stroke-width="3" stroke-dasharray="12 14" stroke-opacity="0.55"/>
+
+  <!-- Shop pin. Deep aqua so it is the darkest thing in the frame by design. -->
+  <g>
+    <circle cx="400" cy="300" r="30" fill="#0B7F79"/>
+    <path d="M389.5 300a10.5 10.5 0 1 1 21 0 10.5 10.5 0 0 1-21 0Z" fill="#D1F2EE"/>
+  </g>
+
+  <!-- Two nearby drop points. -->
+  <g fill="#FB6540">
+    <circle cx="248" cy="216" r="12"/>
+    <circle cx="546" cy="392" r="12"/>
+  </g>
+</svg>
