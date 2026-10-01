@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { business } from '../data/business.js'
 import { fillTokens } from '../utils/format.js'
+import { useRemoteFaq } from '../hooks/useRemoteFaq.js'
 import { Reveal } from './Reveal.jsx'
 
 /**
@@ -17,8 +18,12 @@ import { Reveal } from './Reveal.jsx'
  * a click.
  */
 export function Faq() {
-  const items = business.faq.items
-  const [open, setOpen] = useState(() => (items[0] ? 0 : null))
+  const { items } = useRemoteFaq()
+  // Open state is keyed on the question TEXT, not an index. Items can be
+  // replaced after first paint when the remote FAQ arrives, and an index would
+  // then point at a different question (or past the end of the list) depending
+  // on how long the fetch took.
+  const [open, setOpen] = useState(() => items[0]?.q ?? null)
   const tokens = { name: business.name, area: business.area, city: business.city }
 
   return (
@@ -44,7 +49,7 @@ export function Faq() {
           <Reveal delay={80} className="min-w-0 lg:col-span-7">
             <ul className="flex flex-col gap-3">
               {items.map((item, index) => {
-                const isOpen = open === index
+                const isOpen = open === item.q
                 const panelId = `faq-panel-${index}`
                 const buttonId = `faq-button-${index}`
 
@@ -61,7 +66,7 @@ export function Faq() {
                         type="button"
                         aria-expanded={isOpen}
                         aria-controls={panelId}
-                        onClick={() => setOpen(isOpen ? null : index)}
+                        onClick={() => setOpen(isOpen ? null : item.q)}
                         className="press flex w-full items-center justify-between gap-4 rounded-3xl px-6 py-5 text-left"
                       >
                         <span className="font-display text-[1.0625rem] font-bold text-ink">{item.q}</span>

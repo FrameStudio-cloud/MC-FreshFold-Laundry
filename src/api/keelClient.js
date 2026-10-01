@@ -1,0 +1,95 @@
+/**
+ * keel-api client.
+ *
+ * Transport only: base URL, the site token, and a retry budget. It knows nothing
+ * about FAQs or services, so the next thing that needs the API adds a function
+ * here rather than growing this file.
+ *
+ * The retry budget is copied from olfatta's client with its reasoning intact,
+ * because the number is the whole point:
+ *
+ *   "These were 3 attempts at a 10s timeout with 1s and 2s backoff, so a slow
+ *   (not refused) API cost roughly 33 seconds of skeleton before the visitor
+ *   saw anything. The API host is on a free Render plan, which sleeps and
+ *   cold-starts in 10-30s... At 4s x 2 with 500ms backoff the worst case is
+ *   about 8.5s."
+ *
+ * Do not raise the timeout. A laundry owner opening a price list will not wait
+ * 33 seconds for it.
+ *
+ * No token is not an error. Without one every call would 401, and the site must
+ * still render from src/data/business.js — that is what keeps this deployable as
+ * a plain static site with no secrets in it.
+ */
+
+const API_BASE = (import.meta.env.VITE_KEEL_API_BASE || 'https://keel-api-37rh.onrender.com').replace(/\/$/, '')
+
+/**
+ * The per-shop site token, injected by the build. Never log this value; the
+ * header name is safe to print, the token is not.
+ */
+const SITE_TOKEN = import.meta.env.VITE_KEEL_SITE_TOKEN || ''
+
+const TIMEOUT_MS = 4000
+const ATTEMPTS = 2
+const BACKOFF_MS = 500
+
+export const hasToken = Boolean(SITE_TOKEN)
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+function headers() {
+  const h = { Accept: 'application/json' }
+  if (SITE_TOKEN) h['x-keel-site-token'] = SITE_TOKEN
+  return h
+}
+
+async function get(path, { signal } = {}) {
+  let lastError
+
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
+    if (attempt > 0) await sleep(BACKOFF_MS)
+    const timer = new AbortController()
+    const timeout = setTimeout(() => timer.abort(), TIMEOUT_MS)
+    const onAbort = () => timer.abort()
+    signal?.addEventListener('abort', onAbort, { once: true })
+
+    try {
+      const res = await fetch(`${API_BASE}${path}`, {
+        headers: headers(),
+        signal: timer.signal,
+      })
+      if (!res.ok) throw new Error(`${path} -> ${res.status}`)
+      return await res.json()
+    } catch (err) {
+      lastError = err
+      // A caller-initiated abort is a decision, not a failure to retry.
+      if (signal?.aborted) throw err
+      // A 401 will not become a 200 on the second attempt, and retrying it
+      // burns the budget to arrive at the same answer.
+      if (err instanceof Error && /->\s*40[13]/.test(err.message)) throw err
+    } finally {
+      clearTimeout(timeout)
+      signal?.removeEventListener('abort', onAbort)
+    }
+  }
+
+  throw lastError
+}
+
+/**
+ * The FAQ a shop owner edited in Keel -> Website.
+ *
+ * page_key/section_key must match what public/keel-manifest.json declares
+ * (`pages.faq.sections[].key`), because those strings ARE the storage keys in
+ * the page_content table. Change one and you silently read an empty array.
+ *
+ * Returns [] rather than throwing when there is nothing published, so a brand
+ * new shop with no saved FAQ is an ordinary empty result and not a failure.
+ */
+export async function fetchFaq({ signal } = {}) {
+  if (!hasToken) return []
+  const rows = await get('/api/page-content?page=faq&section=items', { signal })
+  if (!Array.isArray(rows)) return []
+  return rows
+}

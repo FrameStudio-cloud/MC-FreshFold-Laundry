@@ -380,6 +380,17 @@ export const business = {
   },
 
   // ---------------------------------------------------------------- faq
+  /**
+   * Fallback copy only.
+   *
+   * When VITE_KEEL_SITE_TOKEN is set, these are replaced at runtime by whatever
+   * the owner has saved in Keel -> Website (see hooks/useRemoteFaq.js). They
+   * exist so the section still renders with no token, or if the API is down.
+   *
+   * That makes them a correctness risk rather than a spare: a stale price here
+   * is a stale price a visitor sees whenever keel-api is unreachable. Keep them
+   * aligned with the services list above.
+   */
   faq: {
     eyebrow: 'Questions',
     title: 'Before you order',
@@ -387,27 +398,27 @@ export const business = {
     items: [
       {
         q: 'How much does laundry cost?',
-        a: 'Wash & fold starts at KES 150 per kg. Dry cleaning starts at KES 900 per item. The full item-by-item list is in the Pricing section above, and we confirm the exact price on WhatsApp before we start.',
+        a: 'Wash & fold is KES 200 per kg and wash & iron is KES 300 per kg. Pressing only is KES 150 per garment. Dry cleaning starts at KES 350 for a shirt.',
       },
       {
-        q: 'How long does it take?',
-        a: 'Wash & fold is normally 24–48 hours, dry cleaning 3–5 days. Same-day express is available for wash & fold and ironing if you order before 10:00 AM.',
+        q: 'How long will my laundry take?',
+        a: 'Wash & fold and pressing usually come back within 24 to 48 hours. Dry cleaning takes longer because each piece is cleaned and pressed individually. We will tell you the turnaround when you send your list.',
       },
       {
-        q: 'Can you remove a stain that has already set?',
-        a: 'Usually, yes — but not always. Send us a photo of the stain with the fabric type when you message us and we will tell you honestly whether it will lift before you pay for the treatment.',
+        q: 'Can you handle delicate fabrics?',
+        a: 'Yes. Silks, lace and other delicates are hand washed separately and never go in with the regular load. Tell us in your message which pieces are special.',
       },
       {
-        q: 'Which areas do you collect from?',
-        a: 'We collect free of charge in {area}, Lavington, Kilimani, Parklands, Ngong Road and Westlands. If you are just outside that, message us — we will usually still be able to help.',
+        q: 'Do you clean shoes and curtains?',
+        a: 'Yes. Shoe cleaning is KES 250 per pair, cleaned inside and out and air dried. Curtain cleaning is KES 500 per kg, washed and pressed.',
+      },
+      {
+        q: 'Do you offer same-day service?',
+        a: 'Yes. Express service is a flat KES 500 surcharge for same-day collection. Send your list early in the morning so it can be prioritised.',
       },
       {
         q: 'How do I pay?',
-        a: 'M-Pesa to the number we send you on WhatsApp, or cash at handover. We confirm the amount before collection and send a receipt once your order is back.',
-      },
-      {
-        q: 'Do you wash delicate or expensive items?',
-        a: 'Yes. Silks, linens, wool and anything labelled hand-wash are done separately at low temperature. Tell us in your message if a piece is special — we never put it in with the regular load.',
+        a: 'M-Pesa to the number we confirm on WhatsApp, or cash at handover. We agree the total before we start and send a receipt when your order is back.',
       },
     ],
   },
