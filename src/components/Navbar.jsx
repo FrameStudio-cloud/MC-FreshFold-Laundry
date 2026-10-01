@@ -3,7 +3,7 @@ import { Menu, X } from 'lucide-react'
 import { business } from '../data/business.js'
 import { whatsappLink } from '../utils/whatsapp.js'
 import { fillTokens } from '../utils/format.js'
-import { WhatsAppIcon } from './BrandIcons.jsx'
+import { WhatsAppIcon, ShopLogo } from './BrandIcons.jsx'
 
 /**
  * Sticky header.
@@ -101,7 +101,7 @@ export function Navbar({ onOpenOrder }) {
     >
       <div className="container-x flex h-20 items-center justify-between gap-4">
         <a href="#top" className="press group flex items-center gap-3 rounded-full" aria-label={`${business.name} home`}>
-          <Logo />
+          <ShopLogo src={business.logo} alt={`${business.name} logo`} />
           <span className="flex flex-col leading-none">
             <span className="font-display text-lg font-extrabold tracking-tight text-ink">{business.name}</span>
             {/* Hidden on the narrowest phones: at 360px the tagline wraps to two
@@ -211,26 +211,5 @@ export function Navbar({ onOpenOrder }) {
         </nav>
       </div>
     </header>
-  )
-}
-
-/**
- * Wordmark. A stack of three folded layers in the brand aqua — specific to a
- * laundry rather than a generic circle-and-text logo.
- */
-function Logo() {
-  return (
-    <span
-      aria-hidden="true"
-      className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-600 shadow-soft transition-transform duration-300 group-hover:rotate-6"
-    >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="12.5" width="16" height="4.5" rx="2.25" fill="#ecfaf8" />
-        <rect x="5.5" y="8" width="13" height="4" rx="2" fill="#a5e5df" />
-        <rect x="7" y="3.5" width="10" height="4" rx="2" fill="#fb6540" />
-        <circle cx="18.5" cy="4.5" r="1.6" fill="#ffe5dc" />
-        <circle cx="3.4" cy="7" r="1.1" fill="#ffe5dc" />
-      </svg>
-    </span>
   )
 }

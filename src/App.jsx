@@ -13,7 +13,9 @@ import { FinalCta } from './components/FinalCta.jsx'
 import { Footer } from './components/Footer.jsx'
 import { OrderBar, OrderDrawer } from './components/OrderDrawer.jsx'
 import { WhatsAppFab } from './components/WhatsAppFab.jsx'
+import { BackToTop } from './components/BackToTop.jsx'
 import { useOrder } from './hooks/useOrder.js'
+import { useShopSettings } from './hooks/useShopSettings.js'
 
 /**
  * One page, in the order a visitor actually needs it:
@@ -29,6 +31,11 @@ import { useOrder } from './hooks/useOrder.js'
 export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const order = useOrder()
+
+  // Overlays shop identity (name, number, address, currency, hours) from
+  // keel-api onto the config. Deliberately not used to gate rendering: the
+  // config is already accurate, so this corrects rather than blocks.
+  const { toggles } = useShopSettings()
 
   const openSheet = useCallback(() => setSheetOpen(true), [])
   const closeSheet = useCallback(() => setSheetOpen(false), [])
@@ -58,7 +65,8 @@ export default function App() {
 
       <Footer />
 
-      <WhatsAppFab />
+      <WhatsAppFab enabled={toggles.chat_widget?.enabled !== false} />
+      <BackToTop enabled={toggles.back_to_top?.enabled === true} chatEnabled={toggles.chat_widget?.enabled !== false} />
       <OrderBar count={order.count} total={order.total} onOpen={openSheet} sheetOpen={sheetOpen} />
       <OrderDrawer open={sheetOpen} onClose={closeSheet} order={order} />
     </>

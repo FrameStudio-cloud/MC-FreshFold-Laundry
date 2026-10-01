@@ -16,39 +16,51 @@
  * ============================================================================
  */
 
-export const siteUrl = 'https://freshfold.co.ke' // [REPLACE]
+export const siteUrl = 'https://mc-fresh-fold-laundry.vercel.app' // [REPLACE] the real deployed origin
 
 export const business = {
   // ---------------------------------------------------------------- identity
-  name: 'FreshFold Laundry', // [REPLACE]
-  shortName: 'FreshFold', // [REPLACE] Used where space is tight
-  tagline: 'Laundry done properly, right in {area}', // [REPLACE] {area} is replaced at runtime
+  // Values here mirror the shop's own store_settings row in keel, so the
+  // build-time SEO in src/utils/seo.js and the offline fallback are both
+  // correct. useShopSettings overlays the live row on top, so an owner editing
+  // their details in Keel updates the page without a rebuild.
+  name: 'OLFATTA', // [REPLACE]
+  shortName: 'OLFATTA', // [REPLACE] Used where space is tight
+  tagline: 'Laundry collected from your door in {area}', // [REPLACE] {area} is replaced at runtime
   description:
-    'Wash & fold, dry cleaning, ironing, duvets and shoe cleaning in {area}. Free pickup and delivery, with same-day express service. Order on WhatsApp.', // [REPLACE]
+    'Wash & fold, dry cleaning, pressing and duvet cleaning in {area}, {city}. Order on WhatsApp and we collect from your door.', // [REPLACE]
 
-  currency: 'KES',
+  currency: 'KSh',
 
   // ---------------------------------------------------------------- contact
-  // Digits only, no +, no spaces. This is what wa.me needs.
-  whatsapp: '254700000000', // [REPLACE]
-  phoneDisplay: '+254 700 000 000', // [REPLACE]
-  phoneDial: '+254700000000', // [REPLACE]
-  email: 'hello@freshfold.co.ke', // [OPTIONAL] blank hides the row
-  instagram: 'freshfold.laundry', // [REPLACE]
-  instagramUrl: 'https://instagram.com/freshfold.laundry', // [REPLACE]
+  // Canonical international form, digits only. utils/whatsapp.js also accepts
+  // the local form the owner types in Keel ("0793302518") and normalises it.
+  whatsapp: '254793302518', // [REPLACE]
+  phoneDisplay: '+254 793 302 518', // [REPLACE]
+  phoneDial: '+254793302518', // [REPLACE]
+  email: '', // [OPTIONAL] blank hides the row
+  instagram: '', // [OPTIONAL] blank hides the row
+  instagramUrl: '', // [OPTIONAL]
+
+  // The shop's own mark. Rendered only if it loads; the inline SVG wordmark is
+  // the fallback so a dead storage URL cannot leave a broken image in the
+  // header. Remove to keep the SVG.
+  logo: 'https://hmcowpwfefeeossztuem.supabase.co/storage/v1/object/public/product-images/086468f9-a675-490b-8c97-249bacf8b8a6/1784675514621-vec9bu.png', // [REPLACE]
 
   // ---------------------------------------------------------------- location
-  area: 'Riverside', // [REPLACE]
-  city: 'Nairobi',
+  area: 'Kariani', // [REPLACE]
+  city: 'Muranga', // [REPLACE]
   country: 'Kenya',
-  addressLine: 'Riverside Drive, off Ngong Road', // [REPLACE]
-  directionsNote: 'Free parking behind the building. Ring the blue bell.', // [OPTIONAL]
+  // Rendered on its own — components do not append area/city to it, because the
+  // database stores a single combined "Kariani, Muranga" string.
+  addressLine: 'Kariani, Muranga', // [REPLACE]
+  directionsNote: '', // [OPTIONAL] blank hides the note
 
   // A real embed URL from Google Maps (Share > Embed a map > copy the `src`
   // value only) gives you a live map. Left as '' the site shows the designed
   // placeholder in public/images/map-placeholder.svg instead.
   mapEmbedUrl: '', // [REPLACE]
-  mapLinkUrl: 'https://maps.google.com/?q=Riverside+Nairobi', // [REPLACE]
+  mapLinkUrl: 'https://maps.google.com/?q=Kariani+Muranga', // [REPLACE]
   mapPlaceholder: '/images/map-placeholder.svg', // [OPTIONAL]
 
   /**
@@ -58,20 +70,20 @@ export const business = {
    * source.
    *
    * `days` must use full English day names for schema.org to accept them.
+   * Mirrors store_settings.business_hours for this shop.
    */
-  hours: [
-    { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '07:00', closes: '19:00' },
-    { days: ['Saturday'], opens: '08:00', closes: '18:00' },
-    { days: ['Sunday'], opens: '09:00', closes: '15:00' }, // [REPLACE] delete the line for closed Sundays
-  ],
+  hours: [{ days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], opens: '08:00', closes: '17:00' }],
 
   // ---------------------------------------------------------------- delivery
+  // [REPLACE] CONFIRM WITH THE OWNER. The database has no delivery settings, so
+  // the areas below are placeholders and the copy makes no promise about fees
+  // until it is confirmed.
   delivery: {
     available: true, // [REPLACE] false hides every "free pickup" mention and the delivery step
     free: true, // [REPLACE]
-    feeNote: 'Free pickup and delivery within {area}. Outside {area} we collect at a small fee — we will confirm on WhatsApp.', // [REPLACE]
-    areas: ['Riverside', 'Lavington', 'Kilimani', 'Parklands', 'Ngong Road', 'Westlands'], // [REPLACE]
-    sameDayCutoff: 'Order before 10:00 AM for same-day express delivery.', // [REPLACE]
+    feeNote: 'We collect from your door in {area} and around Muranga. Message us to confirm your area and the collection time.', // [REPLACE]
+    areas: ['Kariani', 'Muranga Town', 'Kangema'], // [REPLACE]
+    sameDayCutoff: 'Order early and we will prioritise your wash for same-day collection.', // [REPLACE]
   },
 
   // ---------------------------------------------------------------- nav
@@ -139,8 +151,25 @@ export const business = {
    *   'job'   -> whole jobs; stepper label reads "jobs"
    *   null    -> stepper is hidden and the card shows "Add" only (flat pricing)
    *
-   * `price` is a NUMBER in KES. The "From KES ..." wording comes from the
+   * `price` is a NUMBER in the shop's currency. The "From" wording comes from the
    * `pricePrefix` field, so the unit and the wording never disagree.
+   */
+  /**
+   * These seven mirror real rows in the shop's `services` table, at the prices
+   * the shop actually charges. The database holds 17; the remainder (blankets,
+   * rugs, leather, wedding dresses, stain removal) are the natural next slice
+   * once the catalogue is driven by the API.
+   *
+   * `unit` is the thing the +/- buttons count. This is the single most
+   * important field on a laundry site: a shirt is counted as an item, a duvet
+   * load is counted in kg, dry cleaning is counted per piece.
+   *   'kg'    -> stepper label reads "kg"
+   *   'item'  -> stepper label reads "items"
+   *   'pair'  -> stepper label reads "pair"
+   *   null    -> stepper is hidden and the card shows "Order" only (flat pricing)
+   *
+   * `price` is a NUMBER in KSh. The "From" wording comes from `pricePrefix`, so
+   * the unit and the wording never disagree.
    */
   services: [
     {
@@ -150,12 +179,38 @@ export const business = {
       icon: 'washing',
       description:
         'Your everyday load, washed at 30°C, dried and folded. Sorted by colour so nothing bleeds onto anything else.',
-      price: 150,
-      pricePrefix: 'From',
+      price: 200,
+      pricePrefix: '',
       unit: 'kg',
       priceNote: 'per kg. Minimum 3 kg.',
       turnaround: '24–48 hours',
       popular: true,
+    },
+    {
+      id: 'wash-iron',
+      category: 'wash',
+      name: 'Wash & iron',
+      icon: 'wind',
+      description:
+        'Washed, dried and pressed, ready to hang. The most-booked service for shirts and office wear.',
+      price: 300,
+      pricePrefix: '',
+      unit: 'kg',
+      priceNote: 'per kg. Minimum 3 kg.',
+      turnaround: '24–48 hours',
+    },
+    {
+      id: 'pressing',
+      category: 'ironing',
+      name: 'Pressing only',
+      icon: 'flame',
+      description:
+        'Already clean, just creased. We press it properly — collars, cuffs and plackets included, not just the flat bits.',
+      price: 150,
+      pricePrefix: '',
+      unit: 'item',
+      priceNote: 'per garment. Minimum 5 items.',
+      turnaround: 'Same day',
     },
     {
       id: 'dry-clean',
@@ -163,37 +218,37 @@ export const business = {
       name: 'Dry cleaning',
       icon: 'sparkles',
       description:
-        'Real solvent cleaning for suits, gowns and lined clothing. Garment comes back pressed, with the shape intact.',
-      price: 900,
+        'Real solvent cleaning for suits, dresses, jackets and gowns. Garment comes back pressed, with the shape intact.',
+      price: 350,
       pricePrefix: 'From',
       unit: 'item',
-      priceNote: 'per item. Suits quoted per piece.',
+      priceNote: 'per item. Shirt KSh 350, jacket 500, dress 600, suit 800.',
       turnaround: '3–5 days',
-    },
-    {
-      id: 'ironing-only',
-      category: 'ironing',
-      name: 'Ironing only',
-      icon: 'flame',
-      description:
-        'Already clean, just creased. We press it properly — collars, cuffs and plackets included, not just the flat bits.',
-      price: 100,
-      pricePrefix: 'From',
-      unit: 'item',
-      priceNote: 'per item. Minimum 5 items.',
-      turnaround: 'Same day',
     },
     {
       id: 'duvets',
       category: 'home',
-      name: 'Duvets & beddings',
+      name: 'Duvet cleaning',
       icon: 'bed',
       description:
-        'Pillows and duvets washed, dried and fluffed. We check for tears first and tell you before we start.',
-      price: 1200,
-      pricePrefix: 'From',
+        'Duvets washed, dried and fluffed. We check for tears first and tell you before we start.',
+      price: 600,
+      pricePrefix: '',
       unit: 'item',
-      priceNote: 'per duvet or pillow set.',
+      priceNote: 'per duvet.',
+      turnaround: '2–3 days',
+    },
+    {
+      id: 'curtains',
+      category: 'home',
+      name: 'Curtain cleaning',
+      icon: 'curtain',
+      description:
+        'Curtains washed and pressed per kilogram. Heavy fabrics go in a larger drum so they come out evenly clean.',
+      price: 500,
+      pricePrefix: '',
+      unit: 'kg',
+      priceNote: 'per kg. Minimum 4 kg.',
       turnaround: '2–3 days',
     },
     {
@@ -202,25 +257,12 @@ export const business = {
       name: 'Shoe cleaning',
       icon: 'shoe',
       description:
-        'Sneakers, boots and leather cleaned inside and out, laces washed, dried in a controlled cabinet — never in direct sun.',
-      price: 800,
-      pricePrefix: 'From',
-      priceNote: 'per pair. Boots quoted individually.',
-      unit: 'item',
+        'Sneakers, boots and leather cleaned inside and out, air dried in a controlled cabinet — never in direct sun.',
+      price: 250,
+      pricePrefix: '',
+      unit: 'pair',
+      priceNote: 'per pair.',
       turnaround: '2 days',
-    },
-    {
-      id: 'curtains',
-      category: 'home',
-      name: 'Curtains & linens',
-      icon: 'curtain',
-      description:
-        'Curtains, tablecloths and bed linens. Heavy fabrics are washed in a larger drum so they come out evenly clean.',
-      price: 350,
-      pricePrefix: 'From',
-      unit: 'kg',
-      priceNote: 'per kg. Minimum 4 kg.',
-      turnaround: '2–3 days',
     },
     {
       id: 'express',
@@ -228,13 +270,13 @@ export const business = {
       name: 'Same-day express',
       icon: 'bolt',
       description:
-        'Priority queue for wash & fold and ironing. Order before 10:00 AM and it comes back the same evening.',
-      price: 300,
-      pricePrefix: 'From',
-      unit: 'kg',
-      priceNote: 'per kg. Includes express handling.',
+        'Priority queue for wash & fold and pressing. Send your list early in the morning and it comes back the same day.',
+      price: 500,
+      pricePrefix: '',
+      unit: null,
+      priceNote: 'flat surcharge, same-day collection.',
       turnaround: 'Same day',
-      accent: true, // paints the card with the warm accent — use sparingly
+      accent: true,
     },
   ],
 
@@ -243,7 +285,7 @@ export const business = {
     eyebrow: 'Straightforward pricing',
     title: 'What it costs, item by item',
     intro:
-      'Prices below are for wash & fold unless the row says otherwise. We confirm the final price on WhatsApp before we start — no surprises at collection.',
+      'Every price below matches the shop\'s live service list. We confirm the final total on WhatsApp before we start — no surprises at collection.',
     note: 'Prices are [REPLACE as of Oct 2026] and include VAT.', // [REPLACE]
     /**
      * Groups become rounded tab targets, and each group becomes a card of
@@ -252,27 +294,26 @@ export const business = {
     groups: [
       {
         id: 'everyday',
-        label: 'Everyday clothing',
-        note: 'Wash & fold, 30°C, folded',
+        label: 'Wash & press',
+        note: 'Collected from your door in {area}',
         items: [
-          { name: 'Shirt', price: 120 },
-          { name: 'Trouser', price: 150 },
-          { name: 'T-shirt', price: 100 },
-          { name: 'Dress', price: 220 },
-          { name: 'Skirt', price: 160 },
-          { name: 'School uniform (set)', price: 600 },
+          { name: 'Wash & fold, per kg', price: 200 },
+          { name: 'Wash & iron, per kg', price: 300 },
+          { name: 'Pressing only, per garment', price: 150 },
+          { name: 'Stain removal, per garment', price: 200 },
         ],
       },
       {
         id: 'special',
-        label: 'Specialist care',
-        note: 'Dry cleaned, comes back pressed',
+        label: 'Dry cleaning',
+        note: 'Cleaned and pressed individually',
         items: [
-          { name: 'Suit jacket', price: 1200 },
-          { name: 'Suit trouser', price: 800 },
-          { name: 'Gown / cocktail dress', price: 1500 },
-          { name: 'Wool coat', price: 1800 },
-          { name: 'Leather jacket', price: 2500 },
+          { name: 'Shirt', price: 350 },
+          { name: 'Jacket or blazer', price: 500 },
+          { name: 'Dress or gown', price: 600 },
+          { name: 'Suit', price: 800 },
+          { name: 'Leather jacket', price: 1200 },
+          { name: 'Wedding dress', price: 3500 },
         ],
       },
       {
@@ -280,24 +321,17 @@ export const business = {
         label: 'Home items',
         note: 'Bulky items, washed separately',
         items: [
-          { name: 'Duvet (single)', price: 1200 },
-          { name: 'Duvet (double)', price: 1600 },
-          { name: 'Pillow pair', price: 700 },
-          { name: 'Curtains (per kg)', price: 350 },
-          { name: 'Tablecloth', price: 500 },
-          { name: 'Bath towel (each)', price: 250 },
+          { name: 'Duvet', price: 600 },
+          { name: 'Curtains, per kg', price: 500 },
+          { name: 'Blanket, per item', price: 400 },
+          { name: 'Rug, small to medium', price: 800 },
         ],
       },
       {
         id: 'shoes',
         label: 'Shoes',
         note: 'Cleaned inside and out, air dried',
-        items: [
-          { name: 'Sneakers (pair)', price: 800 },
-          { name: 'Leather shoes (pair)', price: 1200 },
-          { name: 'Boots (pair)', price: 1400 },
-          { name: 'Slides / sandals (pair)', price: 400 },
-        ],
+        items: [{ name: 'Shoe cleaning, per pair', price: 250 }],
       },
     ],
   },
@@ -398,7 +432,7 @@ export const business = {
     items: [
       {
         q: 'How much does laundry cost?',
-        a: 'Wash & fold is KES 200 per kg and wash & iron is KES 300 per kg. Pressing only is KES 150 per garment. Dry cleaning starts at KES 350 for a shirt.',
+        a: 'Wash & fold is KSh 200 per kg and wash & iron is KSh 300 per kg. Pressing only is KSh 150 per garment. Dry cleaning starts at KSh 350 for a shirt.',
       },
       {
         q: 'How long will my laundry take?',
@@ -410,11 +444,11 @@ export const business = {
       },
       {
         q: 'Do you clean shoes and curtains?',
-        a: 'Yes. Shoe cleaning is KES 250 per pair, cleaned inside and out and air dried. Curtain cleaning is KES 500 per kg, washed and pressed.',
+        a: 'Yes. Shoe cleaning is KSh 250 per pair, cleaned inside and out and air dried. Curtain cleaning is KSh 500 per kg, washed and pressed.',
       },
       {
         q: 'Do you offer same-day service?',
-        a: 'Yes. Express service is a flat KES 500 surcharge for same-day collection. Send your list early in the morning so it can be prioritised.',
+        a: 'Yes. Express service is a flat KSh 500 surcharge for same-day collection. Send your list early in the morning so it can be prioritised.',
       },
       {
         q: 'How do I pay?',

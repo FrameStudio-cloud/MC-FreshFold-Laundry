@@ -14,20 +14,57 @@ import { fillTokens, formatKES } from './format.js'
 
 const MAX_MESSAGE_LENGTH = 3500 // under the limit, leaving headroom for encoding
 
-/** Strips everything that is not a digit, then drops a leading 00 or 0. */
+/**
+ * Normalise a Kenyan phone number to 2547XXXXXXXX / 2541XXXXXXXX, or null.
+ *
+ * The leading-0 rule is the whole point. A shop types their number the way they
+ * say it — "0793302518" — and stripping the zero alone yields 793302518, which
+ * is 9 digits with no country code, so wa.me builds a link that opens nothing.
+ * Verified against the number in the database for the current shop.
+ *
+ * Mirrors keel's own helper at keel/src/lib/collections.js (`normalizeKenyanPhone`)
+ * rather than inventing a fifth copy of this rule; the same logic already appears
+ * in ReceiptModal, CollectPaymentModal and features/credit. The 7/1 check accepts
+ * Safaricom and Airtel and rejects anything else, so a typo returns null instead
+ * of a plausible-looking but wrong number.
+ *
+ * null means "unusable" and the caller must fall back to the configured number —
+ * never link to a number we guessed at.
+ */
 export function normaliseNumber(raw) {
-  const digits = String(raw ?? '').replace(/\D/g, '')
-  if (digits.startsWith('00')) return digits.slice(2)
-  if (digits.startsWith('0') && digits.length > 9) return digits.slice(1)
-  return digits
+  let digits = String(raw ?? '').replace(/\D/g, '')
+  // 00254… is a legitimate way to write an international number.
+  if (digits.startsWith('00')) digits = digits.slice(2)
+  if (digits.startsWith('0')) digits = `254${digits.slice(1)}`
+  if (/^254(7|1)\d{8}$/.test(digits)) return digits
+  return null
 }
 
+/**
+ * Builds the wa.me URL, resolving the number through a fallback chain.
+ *
+ * `number` is whatever the caller has (possibly a live value overlaid from
+ * keel-api). business.whatsapp is the configured fallback. If neither parses as
+ * a Kenyan number we return null rather than emit wa.me/null: a link that opens
+ * nothing is worse than an anchor with no href, which React renders as inert.
+ */
 function toWaLink(number, text) {
+  const target = normaliseNumber(number) ?? normaliseNumber(business.whatsapp)
+  if (!target) {
+    if (import.meta.env.DEV) {
+      console.warn(
+        '[whatsapp] no valid Kenyan number from the API or business.whatsapp — ' +
+          'WhatsApp links are disabled. Set business.whatsapp to e.g. "0793302518".',
+      )
+    }
+    return null
+  }
+
   const trimmed =
     text.length > MAX_MESSAGE_LENGTH
       ? `${text.slice(0, MAX_MESSAGE_LENGTH)}\n\n(Message too long — see website)`
       : text
-  return `https://wa.me/${normaliseNumber(number)}?text=${encodeURIComponent(trimmed)}`
+  return `https://wa.me/${target}?text=${encodeURIComponent(trimmed)}`
 }
 
 /**
@@ -85,26 +122,29 @@ export function orderWhatsAppLink(items) {
   return toWaLink(business.whatsapp, message)
 }
 
-/** "kg" stays "kg"; "item" becomes "items" once the count is not one. */
+/**
+ * "kg" stays "kg"; "item" becomes "items" once the count is not one; and
+ * arbitrary unit_labels from the database (pair, hr, tire, room, photo, nail)
+ * pluralise by suffix, because a hardcoded switch would print "2 pair".
+ *
+ * Pass singular=true for a per-unit price ("KSh 250/pair") and for a button that
+ * acts on exactly one unit ("Add one item").
+ */
 export function unitNoun(unit, singular = false) {
-  switch (unit) {
-    case 'kg':
-      return 'kg'
-    case 'item':
-      return singular ? 'item' : 'items'
-    case 'job':
-      return singular ? 'job' : 'jobs'
-    default:
-      return unit ?? ''
-  }
+  if (!unit) return ''
+  if (unit === 'kg') return 'kg'
+  if (singular) return unit === 'item' ? 'item' : unit === 'job' ? 'job' : unit
+  if (unit === 'item') return 'items'
+  if (unit === 'job') return 'jobs'
+  // Mass nouns and already-plural labels must not gain an "s".
+  if (/s$|^(kg|g|ml|l)$/i.test(unit)) return unit
+  return `${unit}s`
 }
 
 /** Label for the +/- stepper, e.g. { singular: 'kg', plural: 'kg' }. */
 export function unitLabel(unit) {
   if (!unit) return null
-  if (unit === 'item') return { singular: 'item', plural: 'items' }
-  if (unit === 'job') return { singular: 'job', plural: 'jobs' }
-  return { singular: unit, plural: unit }
+  return { singular: unitNoun(unit, true), plural: unitNoun(unit) }
 }
 
 /** The price on its own, e.g. "From KES 150" — the headline a card renders. */

@@ -1,5 +1,32 @@
 {
   "version": 1,
+  "features": {
+    "chat_widget": {
+      "name": "WhatsApp Button",
+      "description": "Floating button that opens WhatsApp with a pre-filled order message",
+      "icon": "message-circle",
+      "configurable": [
+        {
+          "key": "whatsapp_number",
+          "type": "tel",
+          "label": "WhatsApp Number",
+          "placeholder": "254700000000"
+        },
+        {
+          "key": "position",
+          "type": "select",
+          "label": "Position",
+          "options": ["right", "left"]
+        }
+      ]
+    },
+    "back_to_top": {
+      "name": "Back To Top",
+      "description": "Appears once the visitor scrolls down the page",
+      "icon": "arrow-up",
+      "configurable": []
+    }
+  },
   "pages": {
     "faq": {
       "label": "FAQ",

@@ -1,13 +1,62 @@
+import { useState } from 'react'
+
 /**
- * Brand marks that lucide-react no longer ships.
+ * Brand marks that lucide-react no longer ships, plus the site's own logo.
  *
  * Lucide v1 dropped the social/brand glyphs (Instagram, Facebook, WhatsApp) and
  * a few pictorial ones. They are trademarks rather than generic UI icons, so
  * drawing them here is the correct call anyway — an icon set should not be the
  * source of a brand's logo.
  *
- * All three inherit `currentColor` and size from props, like any lucide icon.
+ * All of them inherit `currentColor` and size from props, like any lucide icon.
  */
+
+/**
+ * The shop's own logo, with the built-in mark as the fallback.
+ *
+ * The image is a remote URL in Supabase storage, so it can 404 or be slow or be
+ * blocked, and the header is the one place a broken image is most visible. A
+ * failed load therefore swaps to the SVG rather than leaving a torn image or a
+ * layout jump. `rounded-2xl` keeps it inside the site's no-sharp-corners rule.
+ */
+export function ShopLogo({ src, alt, className = 'h-11 w-11' }) {
+  const [failed, setFailed] = useState(!src)
+
+  if (failed) return <StackedFoldMark className={className} />
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      width="44"
+      height="44"
+      decoding="async"
+      onError={() => setFailed(true)}
+      className={`${className} shrink-0 rounded-2xl border border-primary-100 bg-surface object-contain`}
+    />
+  )
+}
+
+/**
+ * The default mark: a stack of three folded layers in the brand aqua. Specific
+ * to a laundry rather than a generic circle-and-text logo.
+ */
+export function StackedFoldMark({ className = 'h-11 w-11' }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`grid ${className} shrink-0 place-items-center rounded-2xl bg-primary-600 shadow-soft transition-transform duration-300 group-hover:rotate-6`}
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="12.5" width="16" height="4.5" rx="2.25" fill="#ecfaf8" />
+        <rect x="5.5" y="8" width="13" height="4" rx="2" fill="#a5e5df" />
+        <rect x="7" y="3.5" width="10" height="4" rx="2" fill="#fb6540" />
+        <circle cx="18.5" cy="4.5" r="1.6" fill="#ffe5dc" />
+        <circle cx="3.4" cy="7" r="1.1" fill="#ffe5dc" />
+      </svg>
+    </span>
+  )
+}
 
 export function WhatsAppIcon({ size = 24, ...props }) {
   return (

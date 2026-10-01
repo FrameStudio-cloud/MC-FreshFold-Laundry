@@ -12,11 +12,25 @@ import { WhatsAppIcon } from './BrandIcons.jsx'
  * The pulse is a single expanding ring (CSS, aria-hidden). It stops under
  * prefers-reduced-motion and never covers the icon for long enough to be a
  * tap target problem.
+ *
+ * `enabled` comes from the shop's own feature_toggles. The comparison is
+ * `!== false` rather than `=== true` on purpose: a shop that has never opened the
+ * Keel website tab has no toggle stored at all, and defaulting that to "hidden"
+ * would mean the button disappears for everyone who has not visited the settings
+ * page. Opt-out, not opt-in.
+ *
+ * The number comes from business.whatsapp, which useShopSettings overlays from
+ * the API, so the owner changes it in Keel rather than in code. whatsappLink()
+ * returns null when no number parses, and a link to a wrong number is worse than
+ * no button, so the whole thing hides in that case.
  */
-export function WhatsAppFab() {
+export function WhatsAppFab({ enabled = true }) {
+  const href = enabled ? whatsappLink() : null
+  if (!href) return null
+
   return (
     <a
-      href={whatsappLink()}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={business.order.fabLabel}

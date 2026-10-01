@@ -3,7 +3,7 @@ import { business } from '../data/business.js'
 import { fillTokens } from '../utils/format.js'
 import { formatHoursRow } from '../utils/hours.js'
 import { Reveal } from './Reveal.jsx'
-import { InstagramIcon, WhatsAppIcon } from './BrandIcons.jsx'
+import { InstagramIcon, ShopLogo, WhatsAppIcon } from './BrandIcons.jsx'
 
 /**
  * Footer.
@@ -55,13 +55,7 @@ export function Footer() {
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
           <div className="min-w-0 lg:col-span-4">
             <a href="#top" className="press inline-flex items-center gap-3 rounded-full">
-              <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-2xl bg-primary-600 shadow-soft">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect x="4" y="12.5" width="16" height="4.5" rx="2.25" fill="#ecfaf8" />
-                  <rect x="5.5" y="8" width="13" height="4" rx="2" fill="#a5e5df" />
-                  <rect x="7" y="3.5" width="10" height="4" rx="2" fill="#fb6540" />
-                </svg>
-              </span>
+              <ShopLogo src={business.logo} alt={`${business.name} logo`} />
               <span className="font-display text-lg font-extrabold tracking-tight text-ink">{business.name}</span>
             </a>
             <p className="mt-5 max-w-sm text-[0.9375rem] leading-relaxed text-ink-body">

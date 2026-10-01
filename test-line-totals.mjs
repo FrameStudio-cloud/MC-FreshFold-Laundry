@@ -1,50 +1,71 @@
 /**
- * Verifies the running cost shown beside each service card's stepper is
+ * Verifies the running cost beside each service card's stepper is
  * price x quantity, not the bare quantity formatted as money.
+ *
+ * Prices here are asserted against business.js, which mirrors the shop's live
+ * `services` rows. If a price is changed in one place and not the other this
+ * test fails, which is the point: the FAQ quotes these same numbers in prose.
+ *
+ * Flat-priced services carry no stepper by design (a "+/-" next to a flat
+ * "KSh 500" implies four separate jobs), so they are asserted to have none.
  */
 import { chromium } from 'playwright'
 
 const SITE = process.env.URL || 'http://localhost:4173/'
+
+const STEPPER_SERVICES = {
+  'Wash & fold': 200,
+  'Wash & iron': 300,
+  'Pressing only': 150,
+  'Dry cleaning': 350,
+  'Duvet cleaning': 600,
+  'Curtain cleaning': 500,
+  'Shoe cleaning': 250,
+}
+const FLAT_SERVICES = ['Same-day express']
+
 const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 await page.goto(SITE, { waitUntil: 'networkidle' })
 
-// service name -> expected unit price from business.js
-const prices = {
-  'Wash & fold': 150,
-  'Dry cleaning': 900,
-  'Ironing only': 100,
-  'Duvets & beddings': 1200,
-  'Shoe cleaning': 800,
-  'Curtains & linens': 350,
-  'Same-day express': 300,
-}
-
 let failures = 0
+const fail = (msg) => { failures++; console.log(`FAIL  ${msg}`) }
 
-for (const [name, price] of Object.entries(prices)) {
+for (const [name, price] of Object.entries(STEPPER_SERVICES)) {
   const card = page.locator('article', { has: page.locator('h3', { hasText: name }) }).first()
-  const plus = card.locator('[role="group"] button:not([disabled])').last()
-
-  // Read the money span exactly rather than substring-matching the whole card:
-  // "KES 1" is a substring of "KES 100" and of "KES 1,200".
-  const money = card.locator('[role="group"]').locator('xpath=following-sibling::span[1]')
-
   await card.scrollIntoViewIfNeeded()
+
+  const plus = card.locator('[role="group"] button:not([disabled])').last()
+  // Read the money span exactly rather than substring-matching the card text:
+  // "KES 1" is a substring of "KES 100" and of "KSh 1,200".
+  const money = card.locator('[role="group"]').locator('xpath=following-sibling::span[1]')
 
   for (let qty = 1; qty <= 3; qty++) {
     await plus.click()
     const counter = (await card.locator('[role="group"] span[aria-live]').innerText()).replace(/\s+/g, ' ').trim()
     const shown = (await money.innerText()).trim()
-    const want = `KES ${(price * qty).toLocaleString('en-KE')}`
-    const ok = shown === want
-    if (!ok) failures++
-    console.log(`${ok ? 'PASS' : 'FAIL'}  ${name.padEnd(18)} @${qty} -> expect ${want.padEnd(10)} got "${shown}"  (counter "${counter}")`)
+    const want = `KSh ${(price * qty).toLocaleString('en-KE')}`
+    if (shown === want) {
+      console.log(`PASS  ${name.padEnd(16)} @${qty} -> ${shown}  (counter "${counter}")`)
+    } else {
+      fail(`${name} @${qty}: expected "${want}" got "${shown}"`)
+    }
   }
 
-  // Reset this card so the next one starts clean.
   for (let i = 0; i < 3; i++) {
     await card.locator('[role="group"] button:not([disabled])').first().click().catch(() => {})
+  }
+}
+
+for (const name of FLAT_SERVICES) {
+  const card = page.locator('article', { has: page.locator('h3', { hasText: name }) }).first()
+  await card.scrollIntoViewIfNeeded()
+  const hasStepper = (await card.locator('[role="group"]').count()) > 0
+  const hasOrderButton = (await card.locator('a:has-text("Order")').count()) > 0
+  if (!hasStepper && hasOrderButton) {
+    console.log(`PASS  ${name.padEnd(16)} flat price -> no stepper, direct Order link`)
+  } else {
+    fail(`${name}: expected no stepper and a direct Order link (stepper=${hasStepper}, orderButton=${hasOrderButton})`)
   }
 }
 

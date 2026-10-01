@@ -20,7 +20,7 @@ await page.goto(SITE, { waitUntil: 'networkidle' })
 // ---- category filter -------------------------------------------------------
 const titles = () => page.locator('#service-panel article h3').allTextContents()
 
-check('all services shown initially', (await titles()).length === 7, `${(await titles()).length} cards`)
+check('all services shown initially', (await titles()).length === 8, `${(await titles()).length} cards`)
 
 await page.locator('#cat-home').click()
 const homeItems = await titles()

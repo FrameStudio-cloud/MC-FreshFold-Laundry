@@ -78,6 +78,21 @@ async function get(path, { signal } = {}) {
 }
 
 /**
+ * The shop's own settings row: name, contacts, address, currency, hours.
+ *
+ * This is the only source of shop identity. The 19 returned columns are named
+ * explicitly on the server (keel-api/src/routes/settings.js) precisely so a new
+ * column is a decision rather than something published by accident.
+ *
+ * Returns null when there is no token so the caller can treat "not configured"
+ * and "nothing saved" as the same thing and keep the config copy.
+ */
+export async function fetchShopSettings({ signal } = {}) {
+  if (!hasToken) return null
+  return get('/api/settings', { signal })
+}
+
+/**
  * The FAQ a shop owner edited in Keel -> Website.
  *
  * page_key/section_key must match what public/keel-manifest.json declares

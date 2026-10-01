@@ -144,7 +144,7 @@ export function OrderDrawer({ open, onClose, order }) {
             <ul className="flex flex-col gap-3 pb-2">
               {items.map(({ service, qty }) => {
                 const label = unitLabel(service.unit)
-                const noun = unitNoun(service.unit)
+                const noun = unitNoun(service.unit, true)
                 return (
                   <li
                     key={service.id}
@@ -174,7 +174,7 @@ export function OrderDrawer({ open, onClose, order }) {
                           >
                             <Minus size={16} aria-hidden="true" />
                             <span className="sr-only">
-                              Remove one {unitNoun(service.unit)} of {service.name}
+                              Remove one {unitNoun(service.unit, true)} of {service.name}
                             </span>
                           </button>
                           <span className="min-w-12 text-center text-sm font-bold tabular-nums text-ink">
@@ -186,7 +186,7 @@ export function OrderDrawer({ open, onClose, order }) {
                             className="press grid h-9 w-9 place-items-center rounded-full bg-primary-600 text-white hover:bg-primary-700"
                           >
                             <Plus size={16} aria-hidden="true" />
-                            <span className="sr-only">Add one {unitNoun(service.unit)} of {service.name}</span>
+                            <span className="sr-only">Add one {unitNoun(service.unit, true)} of {service.name}</span>
                           </button>
                         </div>
                       ) : (

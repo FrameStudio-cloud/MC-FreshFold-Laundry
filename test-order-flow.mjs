@@ -10,7 +10,9 @@ const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 360, height: 900 } })
 await page.goto(SITE, { waitUntil: 'networkidle' })
 
-// Wash & fold: +3 (kg). Dry cleaning: +2 (items). Same-day express: +1.
+// Wash & fold: +3 (kg). Dry cleaning: +2 (items). Shoe cleaning: +2 (pairs).
+// "Same-day express" is deliberately excluded: it is flat-priced and correctly
+// has no stepper, so it is reached through its own Order link instead.
 async function bump(serviceName, times) {
   const card = page.locator('article', { has: page.locator('h3', { hasText: serviceName }) }).first()
   const group = card.locator('[role="group"]')
@@ -22,7 +24,7 @@ async function bump(serviceName, times) {
 
 await bump('Wash & fold', 3)
 await bump('Dry cleaning', 2)
-await bump('Same-day express', 1)
+await bump('Shoe cleaning', 2)
 
 // Open the sheet via the sticky mobile bar.
 await page.locator('button:has-text("Your order")').first().click()
@@ -36,10 +38,15 @@ console.log(url.pathname.replace('/', ''))
 console.log('\n=== MESSAGE AS THE BUSINESS RECEIVES IT ===')
 console.log(url.searchParams.get('text'))
 console.log('\n=== SHAPE CHECKS ===')
-console.log('no "undefined" :', !url.searchParams.get('text').includes('undefined'))
-console.log('no "{{" tokens :', !url.searchParams.get('text').includes('{'))
-console.log('total present  :', /Estimated total: KES [\d,]+/.test(url.searchParams.get('text')))
-console.log('address prompt :', url.searchParams.get('text').includes('Pickup address:'))
+const txt = url.searchParams.get('text')
+const currencies = [...new Set(txt.match(/\b(KES|KSh)\b/g) ?? [])]
+console.log('no "undefined" :', !txt.includes('undefined'))
+console.log('no "{{" tokens :', !txt.includes('{'))
+console.log('total present  :', /Estimated total: \S+ [\d,]+/.test(txt))
+// A single currency across every line and the total. Mixed output means one
+// call site forgot to pass business.currency and the shop's customer sees it.
+console.log('one currency   :', currencies.length === 1, currencies.join(','))
+console.log('address prompt :', txt.includes('Pickup address:'))
 console.log('digits-only num:', /^\d{9,15}$/.test(url.pathname.replace('/', '')))
 
 // Also verify the empty-state copy, then Escape closes the sheet.

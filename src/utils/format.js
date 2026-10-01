@@ -5,14 +5,24 @@
  * to parse a string. Formatting happens once, here, at render time.
  */
 
-const KES = new Intl.NumberFormat('en-KE', {
+import { business } from '../data/business.js'
+
+const NUMBER = new Intl.NumberFormat('en-KE', {
   maximumFractionDigits: 0,
   minimumFractionDigits: 0,
 })
 
-/** 1050 -> "KES 1,050" */
-export function formatKES(amount, currency = 'KES') {
-  return `${currency} ${KES.format(Math.round(Number(amount) || 0))}`
+/**
+ * 1050 -> "KSh 1,050"
+ *
+ * The currency defaults to the shop's own symbol rather than a literal, because
+ * a hardcoded default is how the same page ends up printing "KES 200/kg" in the
+ * order lines and "KSh 1,800" in the total: every call site has to remember to
+ * pass the currency, and the one that forgets is invisible until an order is
+ * actually sent.
+ */
+export function formatKES(amount, currency = business.currency) {
+  return `${currency} ${NUMBER.format(Math.round(Number(amount) || 0))}`
 }
 
 /** 150 -> "KES 150" — same as formatKES but for unit prices, kept separate so

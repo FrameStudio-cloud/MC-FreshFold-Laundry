@@ -26,7 +26,9 @@ export function Contact() {
     {
       icon: MapPin,
       label: 'Address',
-      value: `${business.addressLine}, ${business.area}, ${business.city}`,
+      // addressLine only: the database stores one combined "Kariani, Muranga"
+      // string, so appending area and city would print the town twice.
+      value: business.addressLine,
       href: business.mapLinkUrl,
     },
     {
@@ -136,7 +138,7 @@ export function Contact() {
                 className="press mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-whatsapp px-6 py-4 text-base font-semibold text-white shadow-soft hover:bg-whatsapp-hover"
               >
                 <WhatsAppIcon size={20} />
-                WhatsApp {business.whatsapp}
+                WhatsApp {business.phoneDisplay}
               </a>
             </div>
           </Reveal>
@@ -164,9 +166,7 @@ export function Contact() {
                   />
                   <div className="absolute inset-x-4 bottom-4 rounded-3xl bg-surface/95 p-5 shadow-lift backdrop-blur">
                     <p className="font-display text-lg font-extrabold text-ink">{business.shortName}</p>
-                    <p className="mt-1 text-sm text-ink-body">
-                      {business.addressLine}, {business.area}, {business.city}
-                    </p>
+                    <p className="mt-1 text-sm text-ink-body">{business.addressLine}</p>
                     <a
                       href={business.mapLinkUrl}
                       target="_blank"
