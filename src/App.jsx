@@ -14,6 +14,7 @@ import { Footer } from './components/Footer.jsx'
 import { OrderBar, OrderDrawer } from './components/OrderDrawer.jsx'
 import { WhatsAppFab } from './components/WhatsAppFab.jsx'
 import { BackToTop } from './components/BackToTop.jsx'
+import { PageTracker } from './components/PageTracker.jsx'
 import { useOrder } from './hooks/useOrder.js'
 import { useShopSettings } from './hooks/useShopSettings.js'
 import { useRemoteServices } from './hooks/useRemoteServices.js'
@@ -45,6 +46,9 @@ export default function App() {
   useRemoteDelivery()
   const order = useOrder(catalogue.services)
 
+  const chatEnabled = toggles.chat_widget?.enabled !== false
+  const backToTopEnabled = toggles.back_to_top?.enabled === true
+
   const openSheet = useCallback(() => setSheetOpen(true), [])
   const closeSheet = useCallback(() => setSheetOpen(false), [])
 
@@ -58,6 +62,10 @@ export default function App() {
       </a>
 
       <Navbar onOpenOrder={openSheet} />
+
+      {/* Nothing rendered. Arms the SDK on the site token, then reports one page
+          view once the owner's page_tracking toggle has arrived. */}
+      <PageTracker toggles={toggles} />
 
       <main>
         <Hero onViewServices={() => document.getElementById('services')?.scrollIntoView({ block: 'start' })} />
@@ -79,8 +87,8 @@ export default function App() {
 
       <Footer />
 
-      <WhatsAppFab enabled={toggles.chat_widget?.enabled !== false} />
-      <BackToTop enabled={toggles.back_to_top?.enabled === true} chatEnabled={toggles.chat_widget?.enabled !== false} />
+      <WhatsAppFab enabled={chatEnabled} />
+      <BackToTop enabled={backToTopEnabled} chatEnabled={chatEnabled} />
       <OrderBar count={order.count} total={order.total} onOpen={openSheet} sheetOpen={sheetOpen} />
       <OrderDrawer open={sheetOpen} onClose={closeSheet} order={order} />
     </>

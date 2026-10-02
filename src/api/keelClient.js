@@ -24,6 +24,28 @@
 
 const API_BASE = (import.meta.env.VITE_KEEL_API_BASE || 'https://keel-api-37rh.onrender.com').replace(/\/$/, '')
 
+import { reportFailure, reportOk } from '../lib/dataHealth.js'
+
+/**
+ * Data-health lives HERE, not in the hooks that call these functions.
+ *
+ * This is kikoi's structure: report success and failure in the layer that knows
+ * whether the call worked, so a read cannot be added without reporting. An
+ * earlier version reported from the React hooks, one level up, which meant a new
+ * fetch in this file would have gone silently unreported — the exact class of bug
+ * this module exists to catch.
+ *
+ * `resource` is the SDK's closed health vocabulary, not a free-form label:
+ * settings | catalogue | product | banners | page_content. fetchFaq and
+ * fetchPageSection both report page_content, which is correct rather than a
+ * compromise — they are the same upstream, and the SDK emits on transitions only,
+ * so one agreeing on the other's state produces no event.
+ *
+ * Note the import direction: this file -> dataHealth -> analytics -> sdk. It is
+ * deliberately one-way. analytics.js does not import this file; page views reach
+ * it through lib/pageViews.js, which is what stops that closing into a cycle.
+ */
+
 /**
  * The per-shop site token, injected by the build. Never log this value; the
  * header name is safe to print, the token is not.
@@ -44,7 +66,7 @@ function headers() {
   return h
 }
 
-async function get(path, { signal } = {}) {
+async function get(path, { signal, resource } = {}) {
   let lastError
 
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
@@ -60,21 +82,76 @@ async function get(path, { signal } = {}) {
         signal: timer.signal,
       })
       if (!res.ok) throw new Error(`${path} -> ${res.status}`)
-      return await res.json()
+      const data = await res.json()
+      if (resource) reportOk(resource)
+      return data
     } catch (err) {
       lastError = err
       // A caller-initiated abort is a decision, not a failure to retry.
       if (signal?.aborted) throw err
       // A 401 will not become a 200 on the second attempt, and retrying it
       // burns the budget to arrive at the same answer.
-      if (err instanceof Error && /->\s*40[13]/.test(err.message)) throw err
+      if (err instanceof Error && /->\s*40[13]/.test(err.message)) {
+        // Still reported: a rejected token is a real fault and the operator
+        // needs to see it, not an absence of traffic. kikoi reports its
+        // equivalent (`noSupabase`, `noShopId`) for the same reason.
+        if (resource) reportFailure(resource, err)
+        throw err
+      }
     } finally {
       clearTimeout(timeout)
       signal?.removeEventListener('abort', onAbort)
     }
   }
 
+  // Reached only once the budget is spent, so a retry that recovers reports
+  // nothing. Reporting per attempt would make one cold start emit a
+  // health_fail and a health_ok, which is the noise this avoids.
+  if (resource) reportFailure(resource, lastError)
   throw lastError
+}
+
+/**
+ * Record one page view.
+ *
+ * A POST, so this needs a token with WRITE scope. There is one token, and
+ * keel-api keys the budget off its scope rather than the method
+ * (auth.js: "const budget = identity.canWrite ? write : read"), so a write token
+ * also serves every read this file does. Verified: a read token is rejected
+ * with 403, the write token returns 201.
+ *
+ * Deliberately NOT the SDK's page_view. Copying kikoi's decision, which was
+ * itself a considered one: `page_views` answers "did people visit, and what did
+ * they look at?" for the shop owner, and `site_events` answers "is anything
+ * broken, and since when?" for us. Two audiences, two tables, one closed
+ * vocabulary of event names, and neither able to break the other. So the SDK
+ * runs with autoPageView off and this owns page views.
+ *
+ * Analytics must never break the site or surface anything to a visitor, so
+ * failures are swallowed. Page views are best-effort by nature.
+ */
+export async function trackPageView({ page, productName } = {}) {
+  if (!hasToken) return null
+  if (!page) return null
+
+  const body = JSON.stringify({
+    page,
+    product_name: productName ?? null,
+    referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+  })
+
+  const res = await fetch(`${API_BASE}/api/page-views`, {
+    method: 'POST',
+    headers: { ...headers(), 'Content-Type': 'application/json' },
+    body,
+    // Survives the visitor leaving mid-flight. keepalive rather than
+    // sendBeacon, because sendBeacon cannot set the token header and would be
+    // silently unauthenticated.
+    keepalive: true,
+  })
+
+  if (!res.ok) throw new Error(`page-views -> ${res.status}`)
+  return res.json().catch(() => null)
 }
 
 /**
@@ -93,7 +170,7 @@ async function get(path, { signal } = {}) {
  */
 export async function fetchServices({ signal } = {}) {
   if (!hasToken) return null
-  const rows = await get('/api/services', { signal })
+  const rows = await get('/api/services', { signal, resource: 'catalogue' })
   return Array.isArray(rows) ? rows : []
 }
 
@@ -109,7 +186,7 @@ export async function fetchServices({ signal } = {}) {
  */
 export async function fetchShopSettings({ signal } = {}) {
   if (!hasToken) return null
-  return get('/api/settings', { signal })
+  return get('/api/settings', { signal, resource: 'settings' })
 }
 
 /**
@@ -132,7 +209,7 @@ export async function fetchPageSection(page, section, { signal } = {}) {
   if (!hasToken) return []
   const query = new URLSearchParams({ page })
   if (section) query.set('section', section)
-  const rows = await get(`/api/page-content?${query.toString()}`, { signal })
+  const rows = await get(`/api/page-content?${query.toString()}`, { signal, resource: 'page_content' })
   return Array.isArray(rows) ? rows : []
 }
 

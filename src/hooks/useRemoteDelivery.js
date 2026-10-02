@@ -42,7 +42,8 @@ export function useRemoteDelivery() {
         setState({ ready: true, applied: true, error: null })
       })
       .catch((error) => {
-        // Silent by design: the config copy is already on screen.
+        // Silent to the visitor: the config copy is already on screen. Reported
+        // as page_content health by the transport layer.
         setState({ ready: true, applied: false, error })
       })
 

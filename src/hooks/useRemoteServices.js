@@ -44,6 +44,8 @@ export function useRemoteServices() {
         setState({ status: 'ready', services, error: null })
       })
       .catch((error) => {
+        // Health is reported by the transport layer, which knows whether the
+        // call failed. This hook only decides what a visitor sees.
         setState({ status: 'error', services: [], error })
       })
 

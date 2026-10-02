@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowUp } from 'lucide-react'
+import { trackFeature } from '../lib/analytics.js'
 
 /**
  * Back-to-top button, gated on the shop's `back_to_top` feature toggle.
@@ -38,6 +39,9 @@ export function BackToTop({ enabled = false, chatEnabled = true }) {
       onClick={() => {
         const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
         window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
+        // A feature the owner cannot see anyone clicking is a feature they will
+        // eventually switch off. No-op unless the tracking toggle is on.
+        trackFeature('back_to_top')
       }}
       aria-label="Back to top"
       aria-hidden={!visible}

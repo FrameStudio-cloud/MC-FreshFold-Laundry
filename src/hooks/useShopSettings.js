@@ -44,8 +44,10 @@ export function useShopSettings() {
         setState({ ready: true, applied: true, toggles: shopFeatureToggles(raw) })
       })
       .catch(() => {
-        // Silent by design: the config copy is already on screen and is
-        // accurate, so an API failure is not something a visitor should see.
+        // Silent to the visitor: the config copy is already on screen and is
+        // accurate, so an API failure must not read as a crash. It is NOT
+        // silent to us — the transport layer reports settings health, which is
+        // what stops a dead API producing a complete-looking site.
         setState({ ready: true, applied: false, toggles: {} })
       })
 

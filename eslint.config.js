@@ -6,6 +6,21 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 export default [
   { ignores: ['dist', 'node_modules'] },
   {
+    // Serverless functions run on Node, not in the browser, so they get Node's
+    // globals (Buffer, process, console). Without this the api/ handler fails
+    // no-undef on Buffer while being perfectly valid code.
+    files: ['api/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2023,
+      globals: { ...globals.node },
+      sourceType: 'module',
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+    },
+  },
+  {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2023,

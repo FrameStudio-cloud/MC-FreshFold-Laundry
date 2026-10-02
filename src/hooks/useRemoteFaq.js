@@ -58,7 +58,8 @@ export function useRemoteFaq() {
       })
       .catch(() => {
         // Deliberately silent. The section is already on screen from config, so
-        // an API failure is invisible to a visitor by design.
+        // an API failure is invisible to a visitor by design. The transport
+        // layer reports it as page_content health, so it is not invisible to us.
       })
 
     return () => controller.abort()
