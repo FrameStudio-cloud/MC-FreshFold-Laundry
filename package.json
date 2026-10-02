@@ -17,7 +17,8 @@
     "test:failure": "node test-catalogue-failure.mjs",
     "test:header": "node test-header-wrap.mjs",
     "test:delivery": "node test-delivery.mjs",
-    "test:health": "node test-health.mjs"
+    "test:health": "node test-health.mjs",
+    "test:content": "node test-content-pages.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",

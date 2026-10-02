@@ -241,3 +241,25 @@ export async function fetchPageSection(page, section, { signal, resource } = {})
 export async function fetchFaq({ signal } = {}) {
   return fetchPageSection('faq', 'items', { signal, resource: 'faq' })
 }
+
+/**
+ * The address and map the owner edited in Keel -> Website.
+ *
+ * Returns [] when nothing is saved, which is the ordinary state for a shop that
+ * has not filled the page in yet: the site then renders the designed placeholder
+ * from config rather than a broken map.
+ */
+export async function fetchLocation({ signal } = {}) {
+  return fetchPageSection('location', 'details', { signal, resource: 'location' })
+}
+
+/**
+ * Customer reviews the owner edited in Keel -> Website.
+ *
+ * Same contract as fetchFaq: [] is an ordinary empty result, not a failure, and
+ * the reviews section falls back to the config placeholder quotes until this
+ * returns something.
+ */
+export async function fetchTestimonials({ signal } = {}) {
+  return fetchPageSection('testimonials', 'items', { signal, resource: 'testimonials' })
+}

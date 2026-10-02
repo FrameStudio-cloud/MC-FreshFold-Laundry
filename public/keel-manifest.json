@@ -103,6 +103,108 @@
           ]
         }
       ]
+    },
+    "location": {
+      "label": "Location",
+      "description": "Where the shop is, and how to find it",
+      "icon": "map-pin",
+      "sections": [
+        {
+          "key": "details",
+          "label": "Address & map",
+          "description": "Shown on the map card in the contact section.",
+          "fields": [
+            {
+              "key": "address_line",
+              "type": "text",
+              "label": "Address",
+              "description": "The line shown on the map card and used to build a directions link.",
+              "placeholder": "Kariani Main Road, near the blue gate"
+            },
+            {
+              "key": "landmark_note",
+              "type": "textarea",
+              "label": "How to find you",
+              "description": "Optional. Shown under the address on the map card.",
+              "placeholder": "Free collection point. Look for the blue gate next to the pharmacy."
+            },
+            {
+              "key": "map_link_url",
+              "type": "text",
+              "label": "Google Maps link",
+              "description": "Google Maps > Share > Copy link. Leave blank and the address above is used to build one.",
+              "placeholder": "https://maps.app.goo.gl/..."
+            },
+            {
+              "key": "map_embed_url",
+              "type": "text",
+              "label": "Google Maps embed URL",
+              "description": "Google Maps > Share > Embed a map, then copy only what is inside the src=\"...\". Blank shows the designed placeholder.",
+              "placeholder": "https://www.google.com/maps/embed?pb=..."
+            }
+          ]
+        }
+      ]
+    },
+    "testimonials": {
+      "label": "Testimonials",
+      "description": "What customers say",
+      "icon": "quote",
+      "sections": [
+        {
+          "key": "items",
+          "label": "Reviews",
+          "description": "Shown in the reviews section, in this order.",
+          "fields": [
+            {
+              "key": "title",
+              "type": "text",
+              "label": "Section heading",
+              "placeholder": "What customers say"
+            },
+            {
+              "key": "items",
+              "type": "array",
+              "label": "Reviews",
+              "description": "Only real quotes. These are published under the shop's name, so an invented one is a real problem.",
+              "addLabel": "Add review",
+              "itemFields": [
+                {
+                  "key": "quote",
+                  "type": "textarea",
+                  "label": "What they said",
+                  "placeholder": "They called before 9am and it was back the same afternoon."
+                },
+                {
+                  "key": "name",
+                  "type": "text",
+                  "label": "Name",
+                  "placeholder": "Wanjiku"
+                },
+                {
+                  "key": "area",
+                  "type": "text",
+                  "label": "Area",
+                  "placeholder": "Kariani"
+                },
+                {
+                  "key": "service",
+                  "type": "text",
+                  "label": "Service used",
+                  "placeholder": "Wash & fold"
+                },
+                {
+                  "key": "rating",
+                  "type": "text",
+                  "label": "Rating out of 5",
+                  "description": "A number from 1 to 5. Left blank, or anything unreadable, is treated as 5.",
+                  "placeholder": "5"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }

@@ -1,19 +1,24 @@
 import { Quote, Star } from 'lucide-react'
 import { business } from '../data/business.js'
+import { useRemoteTestimonials } from '../hooks/useRemoteTestimonials.js'
 import { fillTokens } from '../utils/format.js'
 import { Reveal } from './Reveal.jsx'
 
 /**
  * Testimonials.
  *
- * Placeholder honesty: business.reviews.placeholder is true in the shipped
- * config, and this component says so on the page — an "★★★★★  Verified
- * customer" badge on invented quotes is the kind of thing that gets a small
- * business into trouble, and it is exactly the detail a paying client notices.
- * Set placeholder: false in business.js once real reviews are in.
+ * Placeholder honesty: business.reviews.placeholder is true in the shipped config,
+ * and this component says so on the page — an "★★★★★ Verified customer" badge on
+ * invented quotes is the kind of thing that gets a small business into trouble,
+ * and it is exactly the detail a paying client notices.
+ *
+ * That honesty is the reason the warning is conditional rather than permanent.
+ * Once the owner saves real reviews in Keel, what is on screen is theirs, so the
+ * banner would be telling them their own reviews are placeholders. It disappears
+ * because that statement stopped being true, not to make the page look better.
  */
 export function Testimonials() {
-  const reviews = business.reviews
+  const { items, title, isPlaceholder } = useRemoteTestimonials()
   const tokens = { name: business.name, area: business.area, city: business.city }
 
   return (
@@ -22,12 +27,12 @@ export function Testimonials() {
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="eyebrow justify-center">
             <span className="inline-block h-2 w-2 rounded-full bg-primary-400" aria-hidden="true" />
-            {reviews.eyebrow}
+            {business.reviews.eyebrow}
           </p>
-          <h2 className="mt-4 text-3xl sm:text-4xl lg:text-[2.75rem]">{fillTokens(reviews.title, tokens)}</h2>
+          <h2 className="mt-4 text-3xl sm:text-4xl lg:text-[2.75rem]">{fillTokens(title, tokens)}</h2>
         </Reveal>
 
-        {reviews.placeholder ? (
+        {isPlaceholder ? (
           <Reveal delay={60} className="mx-auto mt-6 max-w-2xl">
             <p className="rounded-full border border-accent-200 bg-accent-50 px-6 py-3.5 text-center text-sm font-medium text-accent-700">
               Placeholder reviews for layout preview — replace these with real customer quotes before launch.
@@ -36,7 +41,7 @@ export function Testimonials() {
         ) : null}
 
         <ul className="mt-12 grid gap-5 md:grid-cols-3">
-          {reviews.items.map((review, index) => (
+          {items.map((review, index) => (
             <Reveal as="li" key={review.name + index} delay={index * 90} className="h-full min-w-0">
               <figure className="lift flex h-full flex-col rounded-4xl border border-primary-100 bg-surface p-7 shadow-soft">
                 <div className="flex items-center justify-between gap-3">

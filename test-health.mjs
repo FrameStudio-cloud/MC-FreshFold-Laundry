@@ -11,6 +11,8 @@
  * POST is inspected for a health_fail carrying the resource name.
  */
 import { chromium } from 'playwright'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const SITE = process.env.URL || 'http://localhost:4173/'
 
@@ -29,10 +31,32 @@ const SITE = process.env.URL || 'http://localhost:4173/'
  * stated rather than retried.
  */
 const API_BASE = 'https://keel-api-37rh.onrender.com'
+
+/**
+ * The write token, from the environment or from the repo's own .env.
+ *
+ * The .env fallback matters: without it this function silently skipped its warm
+ * up whenever the suite was run as `node test-health.mjs` instead of through a
+ * shell that had the token exported, and a guard that quietly does nothing is
+ * how the whole suite ends up reading the state of a sleeping host.
+ */
+function siteToken() {
+  const fromEnv = (process.env.VITE_KEEL_SITE_TOKEN || '').trim()
+  if (fromEnv) return fromEnv
+  try {
+    const file = path.resolve('.env')
+    return fs
+      .readFileSync(file, 'utf8')
+      .match(/VITE_KEEL_SITE_TOKEN\s*=\s*"?([^\s"\r\n]+)"?/)?.[1] || ''
+  } catch {
+    return ''
+  }
+}
+
 async function wakeApi() {
-  const token = (process.env.VITE_KEEL_SITE_TOKEN || '').trim()
+  const token = siteToken()
   if (!token) {
-    console.log('NOTE  no token in env, skipping warm-up')
+    console.log('NOTE  no token available, skipping warm-up — a cold API may fail these checks')
     return
   }
   const started = Date.now()

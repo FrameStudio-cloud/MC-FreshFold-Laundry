@@ -1,5 +1,6 @@
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { business } from '../data/business.js'
+import { useRemoteLocation } from '../hooks/useRemoteLocation.js'
 import { fillTokens } from '../utils/format.js'
 import { formatHoursRow, openNowLabel } from '../utils/hours.js'
 import { whatsappLink } from '../utils/whatsapp.js'
@@ -9,10 +10,13 @@ import { InstagramIcon, WhatsAppIcon } from './BrandIcons.jsx'
 /**
  * Location, hours and contact.
  *
- * The map is optional by design: if business.mapEmbedUrl is empty the site
- * shows a designed placeholder in brand colours rather than a grey box with
- * "Map unavailable", and "Open in Google Maps" still works. Setting a real
- * embed URL swaps in the live iframe with no code change.
+ * The map is optional by design: with no embed URL the site shows a designed
+ * placeholder in brand colours rather than a grey box with "Map unavailable", and
+ * "Open in Google Maps" still works. That is now true twice over, because the
+ * owner can paste an embed URL in Keel -> Website, and useRemoteLocation only
+ * accepts one that is recognisably a Google embed. Anything else falls back to
+ * the placeholder, so a paste that would not have worked is visible as such
+ * rather than as a blank frame.
  *
  * The open/closed badge is computed from the same hours array the table below
  * renders and the schema is generated from, so it cannot say "Open now" on a
@@ -20,6 +24,7 @@ import { InstagramIcon, WhatsAppIcon } from './BrandIcons.jsx'
  */
 export function Contact() {
   const status = openNowLabel()
+  const location = useRemoteLocation()
   const tokens = { name: business.name, area: business.area, city: business.city }
 
   const rows = [
@@ -28,8 +33,9 @@ export function Contact() {
       label: 'Address',
       // addressLine only: the database stores one combined "Kariani, Muranga"
       // string, so appending area and city would print the town twice.
-      value: business.addressLine,
-      href: business.mapLinkUrl,
+      // From the same source as the map card below, so the two cannot disagree.
+      value: location.addressLine,
+      href: location.mapLinkUrl,
     },
     {
       icon: Phone,
@@ -145,9 +151,9 @@ export function Contact() {
 
           <Reveal delay={80} className="flex min-w-0 flex-col gap-4">
             <div className="relative min-w-0 flex-1 overflow-hidden rounded-4xl border border-primary-100 bg-surface shadow-soft">
-              {business.mapEmbedUrl ? (
+              {location.mapEmbedUrl ? (
                 <iframe
-                  src={business.mapEmbedUrl}
+                  src={location.mapEmbedUrl}
                   title={`Map showing ${business.name} in ${business.area}`}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -166,9 +172,9 @@ export function Contact() {
                   />
                   <div className="absolute inset-x-4 bottom-4 rounded-3xl bg-surface/95 p-5 shadow-lift backdrop-blur">
                     <p className="font-display text-lg font-extrabold text-ink">{business.shortName}</p>
-                    <p className="mt-1 text-sm text-ink-body">{business.addressLine}</p>
+                    <p className="mt-1 text-sm text-ink-body">{location.addressLine}</p>
                     <a
-                      href={business.mapLinkUrl}
+                      href={location.mapLinkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="press mt-4 inline-flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
@@ -180,6 +186,22 @@ export function Contact() {
                 </>
               )}
             </div>
+
+            {/* Outside the map card on purpose. It used to sit inside the
+                placeholder overlay, which meant it disappeared the moment a real
+                embed was saved - and "look for the blue gate" is most useful
+                precisely when there is a live map to be lost in. */}
+            {location.landmarkNote ? (
+              <Reveal
+                delay={40}
+                className="flex items-start gap-3 rounded-4xl border border-primary-100 bg-surface p-5 shadow-soft"
+              >
+                <MapPin size={18} className="mt-0.5 shrink-0 text-primary-500" aria-hidden="true" />
+                <p className="text-[0.9375rem] leading-relaxed text-ink-body">
+                  {location.landmarkNote}
+                </p>
+              </Reveal>
+            ) : null}
 
             {business.delivery.available && business.delivery.areas?.length ? (
               <div className="rounded-4xl border border-primary-100 bg-surface p-7 shadow-soft">
