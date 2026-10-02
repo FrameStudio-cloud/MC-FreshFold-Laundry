@@ -22,7 +22,7 @@
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
     "@fontsource/nunito": "^5.3.0",
-    "@framestudio/keel-analytics": "^0.2.0",
+    "@framestudio/keel-analytics": "^0.3.0",
     "lucide-react": "^1.39.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"

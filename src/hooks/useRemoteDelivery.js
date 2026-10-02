@@ -32,7 +32,7 @@ export function useRemoteDelivery() {
 
     const controller = new AbortController()
 
-    fetchPageSection('delivery', 'details', { signal: controller.signal })
+    fetchPageSection('delivery', 'details', { signal: controller.signal, resource: 'delivery' })
       .then((rows) => {
         for (const patch of deliveryPatches(rows)) patch()
         // Only the owner's own areas are published. Reading business here would

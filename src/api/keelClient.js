@@ -35,11 +35,18 @@ import { reportFailure, reportOk } from '../lib/dataHealth.js'
  * fetch in this file would have gone silently unreported — the exact class of bug
  * this module exists to catch.
  *
- * `resource` is the SDK's closed health vocabulary, not a free-form label:
- * settings | catalogue | product | banners | page_content. fetchFaq and
- * fetchPageSection both report page_content, which is correct rather than a
- * compromise — they are the same upstream, and the SDK emits on transitions only,
- * so one agreeing on the other's state produces no event.
+ * `resource` is this site's own health vocabulary, and it is NOT free-form in
+ * practice: the collector refuses any name the site has not declared for itself,
+ * so adding a signal means declaring it rather than only typing it here. This site
+ * declares settings, services, delivery and faq.
+ *
+ * The four used to be three, with FAQ and delivery sharing `page_content`. They
+ * were the same upstream so that was defensible, but they are not the same thing
+ * to an owner: a delivery-area outage reported as "Page copy broken" is the least
+ * actionable label available for the failure that matters most on a laundry site,
+ * and the two could not be seen failing independently. `resource` is therefore a
+ * required argument on fetchPageSection rather than a default, so a new page read
+ * has to say what it is and cannot quietly fall back into someone else's lamp.
  *
  * Note the import direction: this file -> dataHealth -> analytics -> sdk. It is
  * deliberately one-way. analytics.js does not import this file; page views reach
@@ -170,7 +177,7 @@ export async function trackPageView({ page, productName } = {}) {
  */
 export async function fetchServices({ signal } = {}) {
   if (!hasToken) return null
-  const rows = await get('/api/services', { signal, resource: 'catalogue' })
+  const rows = await get('/api/services', { signal, resource: 'services' })
   return Array.isArray(rows) ? rows : []
 }
 
@@ -201,15 +208,27 @@ export async function fetchShopSettings({ signal } = {}) {
  * one field. That is why delivery keeps note, same_day and areas in one
  * `details` section rather than three sections.
  *
+ * `resource` is required and identifies which signal this read reports as. It is
+ * not defaulted on purpose: a default would let a new page read join another
+ * lamp silently, which is exactly how FAQ and delivery came to share one.
+ *
  * There is deliberately no way to fetch everything: the route returns an empty
  * array when neither parameter is given, because "all rows the caller cannot
  * address" is not a useful answer.
  */
-export async function fetchPageSection(page, section, { signal } = {}) {
+export async function fetchPageSection(page, section, { signal, resource } = {}) {
   if (!hasToken) return []
+  if (!resource) {
+    // Loud in development, harmless in production: a read with no signal still
+    // works and still renders, it just does not report. The alternative - throwing
+    // - would take a price list down over a reporting concern.
+    if (import.meta.env.DEV) {
+      console.warn(`[keelClient] fetchPageSection('${page}') has no health resource`)
+    }
+  }
   const query = new URLSearchParams({ page })
   if (section) query.set('section', section)
-  const rows = await get(`/api/page-content?${query.toString()}`, { signal, resource: 'page_content' })
+  const rows = await get(`/api/page-content?${query.toString()}`, { signal, resource })
   return Array.isArray(rows) ? rows : []
 }
 
@@ -220,5 +239,5 @@ export async function fetchPageSection(page, section, { signal } = {}) {
  * new shop with no saved FAQ is an ordinary empty result and not a failure.
  */
 export async function fetchFaq({ signal } = {}) {
-  return fetchPageSection('faq', 'items', { signal })
+  return fetchPageSection('faq', 'items', { signal, resource: 'faq' })
 }

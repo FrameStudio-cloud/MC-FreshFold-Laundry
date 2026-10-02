@@ -82,12 +82,12 @@ function watchEvents(page) {
   const names = events.map((e) => e.name)
   check('healthy load reports health_ok', names.includes('health_ok'), names.join(', ') || 'none')
   const okRes = events.find((e) => e.name === 'health_ok')
-  check('health_ok names a real resource', ['settings', 'catalogue', 'page_content'].includes(okRes?.properties?.resource), okRes?.properties?.resource)
+  check('health_ok names a real resource', ['settings', 'services', 'delivery', 'faq'].includes(okRes?.properties?.resource), okRes?.properties?.resource)
   check('no health_fail on a healthy load', !names.includes('health_fail'), names.join(', '))
   await page.close()
 }
 
-// ------------------------------------------------- 2. catalogue is broken
+// ------------------------------------------------- 2. services are broken
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   const events = watchEvents(page)
@@ -95,13 +95,32 @@ function watchEvents(page) {
   await page.goto(SITE, { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(11000)
 
-  const fail = events.find((e) => e.name === 'health_fail' && e.properties?.resource === 'catalogue')
-  check('dead catalogue reports health_fail', Boolean(fail), events.map((e) => e.name).join(', ') || 'none')
+  const fail = events.find((e) => e.name === 'health_fail' && e.properties?.resource === 'services')
+  check('dead price list reports health_fail(services)', Boolean(fail), events.map((e) => e.name).join(', ') || 'none')
   check('health_fail carries a reason', Boolean(fail?.properties?.detail), fail?.properties?.detail || '(empty)')
 
   // The visitor-facing half: a dead catalogue must not look like an empty shop.
   const cards = await page.locator('#services article, #services li').count().catch(() => 0)
   check('visitor sees a failure, not an empty catalogue', cards === 0, `${cards} cards`)
+  await page.close()
+}
+
+// ------------------------------- 4. delivery fails apart from the FAQ
+{
+  // The reason this vocabulary change exists. FAQ and delivery shared
+  // `page_content`, so an owner saw one lamp for two unrelated things and a
+  // delivery-area outage read as "Page copy broken".
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+  const events = watchEvents(page)
+  await page.route('**/api/page-content?page=delivery*', (route) => route.abort('failed'))
+  await page.goto(SITE, { waitUntil: 'domcontentloaded' })
+  await page.waitForTimeout(11000)
+
+  const resources = events.filter((e) => e.name.startsWith('health_')).map((e) => e.properties?.resource)
+  const names = events.map((e) => e.name)
+  check('dead delivery reports health_fail(delivery)', resources.includes('delivery'), `${names.join(', ')} | ${resources.join(', ')}`)
+  check('dead delivery does not report as page copy', !resources.includes('page_content'), resources.join(', '))
+  check('the FAQ still reports on its own lamp', resources.includes('faq'), resources.join(', '))
   await page.close()
 }
 
