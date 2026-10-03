@@ -1,5 +1,6 @@
 
 import { business } from '../data/business.js'
+import { useRemoteBenefits } from '../hooks/useRemoteBenefits.js'
 import { fillTokens } from '../utils/format.js'
 import { getIcon } from '../utils/icons.js'
 import { Reveal } from './Reveal.jsx'
@@ -11,6 +12,10 @@ import { Reveal } from './Reveal.jsx'
  * of four identical blocks. Purely decorative, so it is aria-hidden.
  */
 export function Benefits() {
+  // Overlays the owner's saved benefits onto business.benefits. The accent tile
+  // cycles with `index % accents.length`, so an owner adding a fifth benefit gets
+  // the right tile rather than a blank one.
+  useRemoteBenefits()
   const items = business.benefits.items
   const tokens = { name: business.name, area: business.area, city: business.city }
   const accents = ['bg-primary-100 text-primary-700', 'bg-accent-100 text-accent-700', 'bg-primary-100 text-primary-700', 'bg-accent-100 text-accent-700']

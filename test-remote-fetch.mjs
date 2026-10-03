@@ -89,6 +89,9 @@ const pageViews = calls.filter((c) => c.startsWith('/api/page-views'))
 const events = calls.filter((c) => c.startsWith('/api/events'))
 const location = calls.filter((c) => c.includes('page=location'))
 const testimonials = calls.filter((c) => c.includes('page=testimonials'))
+const hero = calls.filter((c) => c.includes('page=hero'))
+const howItWorks = calls.filter((c) => c.includes('page=how_it_works'))
+const benefits = calls.filter((c) => c.includes('page=benefits'))
 const anyToken = tokenHeaders.some(Boolean)
 
 console.log(`EXPECT_REMOTE = ${expectRemote}`)
@@ -130,6 +133,9 @@ if (expectRemote) {
   check('called the delivery page-content route', delivery.length === 1)
   check('called the location page-content route', location.length === 1)
   check('called the testimonials page-content route', testimonials.length === 1)
+  check('called the hero page-content route', hero.length === 1)
+  check('called the how_it_works page-content route', howItWorks.length === 1)
+  check('called the benefits page-content route', benefits.length === 1)
   check('sent the site token header', anyToken)
   check('back-to-top rendered from feature_toggles', btt === 1)
   // One page view, and only ever one.
@@ -148,6 +154,9 @@ if (expectRemote) {
     delivery.length +
     location.length +
     testimonials.length +
+    hero.length +
+    howItWorks.length +
+    benefits.length +
     pageViews.length
   check(
     'only the named reads and one page view',

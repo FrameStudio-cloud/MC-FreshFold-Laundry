@@ -1,5 +1,6 @@
 import { business } from '../data/business.js'
 import { normaliseNumber } from './whatsapp.js'
+import { isKnownIcon } from './icons.js'
 
 /**
  * Maps the shop's `store_settings` row onto this site's config shape.
@@ -251,6 +252,147 @@ export function deliveryPatches(rows) {
       business.delivery.available = true
     })
   }
+
+  return patches
+}
+
+/* ------------------------------------------------- owner-editable copy blocks */
+
+/**
+ * Ceiling on one owner-supplied string. Long enough for any heading or sentence,
+ * short enough that a pasted paragraph cannot reflow a whole page.
+ */
+const MAX_ITEM_TEXT = 400
+
+/**
+ * Owner-supplied array items, with icons that cannot silently become a dot.
+ *
+ * `icons.js` shipped `isKnownIcon` to catch exactly this and nothing called it,
+ * which let `clock` sit in the config rendering a neutral dot on the live site.
+ * Owners typing icon names has no code review at all, so the check moves here and
+ * becomes part of the read path rather than a test that can be skipped.
+ *
+ * An unrecognised or blank icon falls back to the icon already configured for
+ * that position. The honest limitation: that is index-based, so an owner who
+ * reorders their items without setting icons can pick up a neighbour's icon.
+ * Documented rather than hidden, and still better than every icon silently
+ * becoming a dot.
+ *
+ * Returns null when nothing usable was saved, which is the caller's signal to
+ * keep the config array — the same "config is the floor" rule as every other
+ * field in this file.
+ *
+ * @param {unknown} saved    the array the owner saved
+ * @param {Array}  fallback  the config array, for icon defaults
+ * @param {object} opts      which key holds the item's text, and what else to keep
+ */
+function ownerItems(saved, fallback, { textKey, keep = [] }) {
+  if (!Array.isArray(saved) || !saved.length) return null
+
+  const out = []
+  for (const [index, item] of saved.entries()) {
+    if (!item || typeof item !== 'object') continue
+
+    const text = typeof item[textKey] === 'string' ? item[textKey].trim() : ''
+    if (!text) continue
+
+    const row = { [textKey]: text.slice(0, MAX_ITEM_TEXT) }
+    for (const key of keep) {
+      if (key === textKey) continue
+      const value = typeof item[key] === 'string' ? item[key].trim() : ''
+      if (value) row[key] = value.slice(0, MAX_ITEM_TEXT)
+    }
+
+    const typed = typeof item.icon === 'string' ? item.icon.trim() : ''
+    const configured = fallback?.[index]?.icon
+    row.icon = isKnownIcon(typed) ? typed : typeof configured === 'string' ? configured : ''
+
+    out.push(row)
+  }
+
+  return out.length ? out : null
+}
+
+/** One non-empty string field. Keeps the config copy when blank. */
+function textPatch(content, key, apply) {
+  if (!isText(content[key])) return null
+  const value = content[key].trim()
+  return () => apply(value)
+}
+
+/**
+ * Patches for the homepage banner, from a `pages.hero.sections[].banner` row.
+ *
+ * The hero image and the floating badge stay in business.js by decision: the
+ * image is a designed illustration rather than shop data, and the badge carries a
+ * turnaround promise that should be changed deliberately.
+ *
+ * Manifest keys are snake_case because Keel drops any key containing an uppercase
+ * letter: `headlineAccent` and `primaryCta` were both silently removed from the
+ * editor for exactly that reason. The mapping to the config's camelCase lives
+ * here so the constraint is stated once.
+ */
+export function heroPatches(rows) {
+  const content = rows?.[0]?.content
+  if (!content || typeof content !== 'object') return []
+
+  const patches = []
+  const add = (key, apply) => {
+    const patch = textPatch(content, key, apply)
+    if (patch) patches.push(patch)
+  }
+
+  add('eyebrow', (v) => { business.hero.eyebrow = v })
+  add('headline', (v) => { business.hero.headline = v })
+  add('headline_accent', (v) => { business.hero.headlineAccent = v })
+  add('subtext', (v) => { business.hero.subtext = v })
+  add('primary_cta', (v) => { business.hero.primaryCta = v })
+  add('secondary_cta', (v) => { business.hero.secondaryCta = v })
+
+  const trust = ownerItems(content.trust, business.hero.trust, { textKey: 'label' })
+  if (trust) patches.push(() => { business.hero.trust = trust })
+
+  return patches
+}
+
+/** Patches for the "how it works" steps, from `pages.how_it_works`. */
+export function howItWorksPatches(rows) {
+  const content = rows?.[0]?.content
+  if (!content || typeof content !== 'object') return []
+
+  const patches = []
+  const add = (key, apply) => {
+    const patch = textPatch(content, key, apply)
+    if (patch) patches.push(patch)
+  }
+
+  add('eyebrow', (v) => { business.steps.eyebrow = v })
+  add('title', (v) => { business.steps.title = v })
+  add('intro', (v) => { business.steps.intro = v })
+
+  const steps = ownerItems(content.steps, business.steps.steps, { textKey: 'title', keep: ['body'] })
+  if (steps) patches.push(() => { business.steps.steps = steps })
+
+  return patches
+}
+
+/** Patches for the "why choose us" benefits, from `pages.benefits`. */
+export function benefitsPatches(rows) {
+  const content = rows?.[0]?.content
+  if (!content || typeof content !== 'object') return []
+
+  const patches = []
+  const add = (key, apply) => {
+    const patch = textPatch(content, key, apply)
+    if (patch) patches.push(patch)
+  }
+
+  add('eyebrow', (v) => { business.benefits.eyebrow = v })
+  add('title', (v) => { business.benefits.title = v })
+  add('intro', (v) => { business.benefits.intro = v })
+
+  const items = ownerItems(content.items, business.benefits.items, { textKey: 'title', keep: ['body'] })
+  if (items) patches.push(() => { business.benefits.items = items })
 
   return patches
 }

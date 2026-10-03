@@ -263,3 +263,23 @@ export async function fetchLocation({ signal } = {}) {
 export async function fetchTestimonials({ signal } = {}) {
   return fetchPageSection('testimonials', 'items', { signal, resource: 'testimonials' })
 }
+
+/**
+ * The homepage banner copy.
+ *
+ * Returns [] when nothing is saved, which is the shipped state for a new shop:
+ * the site then renders the headlines from business.js.
+ */
+export async function fetchHero({ signal } = {}) {
+  return fetchPageSection('hero', 'banner', { signal, resource: 'hero' })
+}
+
+/** The "how it works" steps. */
+export async function fetchHowItWorks({ signal } = {}) {
+  return fetchPageSection('how_it_works', 'steps', { signal, resource: 'how_it_works' })
+}
+
+/** The "why choose us" benefits. */
+export async function fetchBenefits({ signal } = {}) {
+  return fetchPageSection('benefits', 'items', { signal, resource: 'benefits' })
+}

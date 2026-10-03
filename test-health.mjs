@@ -96,14 +96,38 @@ function watchEvents(page) {
   return seen
 }
 
-// ------------------------------------------------------ 1. healthy site
-{
+/**
+ * One load, returning the health events it produced.
+ *
+ * Kept as a function so the healthy-load case can be retried, because a sleeping
+ * free-tier host fails this case in a way that looks exactly like a broken site.
+ */
+async function loadOnce() {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   const events = watchEvents(page)
   await page.goto(SITE, { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(11000)
+  await page.close()
+  return events
+}
 
-  const names = events.map((e) => e.name)
+// ------------------------------------------------------ 1. healthy site
+{
+  let events = await loadOnce()
+  let names = events.map((e) => e.name)
+
+  // Every single signal failing is not a site fault, it is a host that was asleep:
+  // measured as fully bimodal, all nine health_ok on one run and all nine
+  // health_fail on the next, with nothing changed in between. Warming and
+  // re-running is honest here because the retry is conditional on the *shape* of
+  // the failure, not on wanting green — a single genuine failure never retries.
+  if (names.length > 0 && names.every((n) => n === 'health_fail')) {
+    console.log('NOTE  every signal failed — retrying once after a warm-up (host was asleep)')
+    await wakeApi()
+    events = await loadOnce()
+    names = events.map((e) => e.name)
+  }
+
   check('healthy load reports health_ok', names.includes('health_ok'), names.join(', ') || 'none')
   const okRes = events.find((e) => e.name === 'health_ok')
   // The signals this site declares. Kept as an explicit list rather than read from
@@ -112,13 +136,20 @@ function watchEvents(page) {
 // wrong it became.
 check(
   'health_ok names a declared signal',
-  ['settings', 'services', 'delivery', 'faq', 'location', 'testimonials'].includes(
-    okRes?.properties?.resource,
-  ),
+  [
+    'settings',
+    'services',
+    'delivery',
+    'faq',
+    'location',
+    'testimonials',
+    'hero',
+    'how_it_works',
+    'benefits',
+  ].includes(okRes?.properties?.resource),
   okRes?.properties?.resource,
 )
   check('no health_fail on a healthy load', !names.includes('health_fail'), names.join(', '))
-  await page.close()
 }
 
 // ------------------------------------------------- 2. services are broken

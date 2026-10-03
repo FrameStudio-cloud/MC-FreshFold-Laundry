@@ -1,6 +1,7 @@
 
 import { ArrowRight, Clock } from 'lucide-react'
 import { business } from '../data/business.js'
+import { useRemoteHero } from '../hooks/useRemoteHero.js'
 import { whatsappLink } from '../utils/whatsapp.js'
 import { fillTokens } from '../utils/format.js'
 import { getIcon } from '../utils/icons.js'
@@ -21,6 +22,9 @@ import { WhatsAppIcon } from './BrandIcons.jsx'
  *    composition.
  */
 export function Hero({ onViewServices }) {
+  // Overlays the owner's saved banner onto business.hero, so the copy below is
+  // read the same way whether it came from config or from Keel.
+  useRemoteHero()
   const tokens = { area: business.area, city: business.city, name: business.name }
   const waHref = whatsappLink()
 

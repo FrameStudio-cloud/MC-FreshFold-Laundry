@@ -1,5 +1,6 @@
 
 import { business } from '../data/business.js'
+import { useRemoteHowItWorks } from '../hooks/useRemoteHowItWorks.js'
 import { fillTokens } from '../utils/format.js'
 import { getIcon } from '../utils/icons.js'
 import { Reveal } from './Reveal.jsx'
@@ -19,6 +20,10 @@ import { HangerIcon } from './BrandIcons.jsx'
 const ICON_OVERRIDE = { hanger: HangerIcon }
 
 export function Steps() {
+  // Overlays the owner's saved steps onto business.steps. The list position below
+  // drives the numbering, so an owner adding or removing a step needs no change
+  // here and the badges renumber themselves.
+  useRemoteHowItWorks()
   const steps = business.steps.steps
   const tokens = { name: business.name, area: business.area, city: business.city }
 

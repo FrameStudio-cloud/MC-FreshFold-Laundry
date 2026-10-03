@@ -129,8 +129,12 @@ export const business = {
     image: '/images/hero-laundry.svg', // [REPLACE] any /path, remote URL, or drop-in .jpg
     imageAlt: 'Illustration of a neat stack of freshly folded laundry with soap bubbles', // [REPLACE]
     // Small floating card pinned to the hero image. Set to null to hide.
+    // `timer`, not `clock` - `clock` is not a shipped icon name, so this badge
+    // and benefits.items[2] below were both rendering the neutral dot fallback
+    // on the live site. See test-icon-names.mjs, which now fails on any unknown
+    // name so this cannot happen again silently.
     badge: {
-      icon: 'clock',
+      icon: 'timer',
       title: 'Back in 24 hours',
       note: 'or same-day if you order early', // [REPLACE]
     },
@@ -279,7 +283,7 @@ export const business = {
         body: 'Every load is sorted into lights, darks and reds before a machine is switched on.',
       },
       {
-        icon: 'clock',
+        icon: 'timer', // was 'clock', which is not a shipped icon name
         title: 'We tell you the real turnaround',
         body: 'The time on this page is the time it normally takes. If yours is different, we say so.',
       },

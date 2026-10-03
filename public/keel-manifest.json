@@ -205,6 +205,198 @@
           ]
         }
       ]
+    },
+    "hero": {
+      "label": "Homepage banner",
+      "description": "The first thing a visitor reads",
+      "icon": "sparkles",
+      "sections": [
+        {
+          "key": "banner",
+          "label": "Banner",
+          "description": "The headline and buttons above the fold. {area}, {city} and {name} are replaced with your details.",
+          "fields": [
+            {
+              "key": "eyebrow",
+              "type": "text",
+              "label": "Small line above the headline",
+              "placeholder": "Laundry in {area} since 2016"
+            },
+            {
+              "key": "headline",
+              "type": "text",
+              "label": "Headline",
+              "placeholder": "Your laundry, folded and fresh"
+            },
+            {
+              "key": "headline_accent",
+              "type": "text",
+              "label": "Headline, second line",
+              "placeholder": "back before dinner."
+            },
+            {
+              "key": "subtext",
+              "type": "textarea",
+              "label": "Paragraph under the headline",
+              "placeholder": "Wash & fold collected from your door in {area}."
+            },
+            {
+              "key": "primary_cta",
+              "type": "text",
+              "label": "First button text",
+              "placeholder": "Order on WhatsApp"
+            },
+            {
+              "key": "secondary_cta",
+              "type": "text",
+              "label": "Second button text",
+              "placeholder": "See our prices"
+            },
+            {
+              "key": "trust",
+              "type": "array",
+              "label": "Trust chips under the buttons",
+              "description": "Short promises, shown side by side.",
+              "addLabel": "Add a promise",
+              "itemFields": [
+                {
+                  "key": "label",
+                  "type": "text",
+                  "label": "Promise",
+                  "placeholder": "Free pickup & delivery"
+                },
+                {
+                  "key": "icon",
+                  "type": "text",
+                  "label": "Icon name",
+                  "description": "",
+                  "placeholder": "truck, bolt, leaf, shield, timer"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "how_it_works": {
+      "label": "How it works",
+      "description": "The steps a customer follows",
+      "icon": "hanger",
+      "sections": [
+        {
+          "key": "steps",
+          "label": "Steps",
+          "description": "Shown in order, numbered automatically.",
+          "fields": [
+            {
+              "key": "eyebrow",
+              "type": "text",
+              "label": "Small line above the heading",
+              "placeholder": "How it works"
+            },
+            {
+              "key": "title",
+              "type": "text",
+              "label": "Heading",
+              "placeholder": "Four steps, no errands"
+            },
+            {
+              "key": "intro",
+              "type": "textarea",
+              "label": "Paragraph under the heading",
+              "placeholder": "Everything happens over WhatsApp."
+            },
+            {
+              "key": "steps",
+              "type": "array",
+              "label": "Steps",
+              "description": "The order here is the order on the site.",
+              "addLabel": "Add a step",
+              "itemFields": [
+                {
+                  "key": "title",
+                  "type": "text",
+                  "label": "Step title",
+                  "placeholder": "We pick up"
+                },
+                {
+                  "key": "body",
+                  "type": "textarea",
+                  "label": "What happens",
+                  "placeholder": "Free collection in {area}, usually next morning."
+                },
+                {
+                  "key": "icon",
+                  "type": "text",
+                  "label": "Icon name",
+                  "description": "",
+                  "placeholder": "truck, bolt, leaf, shield, timer"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "benefits": {
+      "label": "Why choose us",
+      "description": "What customers say makes you different",
+      "icon": "leaf",
+      "sections": [
+        {
+          "key": "items",
+          "label": "Benefits",
+          "description": "Shown side by side. {name}, {area} and {city} are replaced with your details.",
+          "fields": [
+            {
+              "key": "eyebrow",
+              "type": "text",
+              "label": "Small line above the heading",
+              "placeholder": "Why {name}"
+            },
+            {
+              "key": "title",
+              "type": "text",
+              "label": "Heading",
+              "placeholder": "The things people actually notice"
+            },
+            {
+              "key": "intro",
+              "type": "textarea",
+              "label": "Paragraph under the heading",
+              "placeholder": "Optional."
+            },
+            {
+              "key": "items",
+              "type": "array",
+              "label": "Benefits",
+              "description": "The order here is the order on the site.",
+              "addLabel": "Add a benefit",
+              "itemFields": [
+                {
+                  "key": "title",
+                  "type": "text",
+                  "label": "Benefit title",
+                  "placeholder": "Colours stay separate"
+                },
+                {
+                  "key": "body",
+                  "type": "textarea",
+                  "label": "What it means",
+                  "placeholder": "Sorted into lights, darks and reds first."
+                },
+                {
+                  "key": "icon",
+                  "type": "text",
+                  "label": "Icon name",
+                  "description": "",
+                  "placeholder": "truck, bolt, leaf, shield, timer"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }
