@@ -18,7 +18,8 @@
     "test:header": "node test-header-wrap.mjs",
     "test:delivery": "node test-delivery.mjs",
     "test:health": "node test-health.mjs",
-    "test:content": "node test-content-pages.mjs"
+    "test:content": "node test-content-pages.mjs",
+    "test:cart": "node test-cart-reach.mjs"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",

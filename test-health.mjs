@@ -106,7 +106,17 @@ function watchEvents(page) {
   const names = events.map((e) => e.name)
   check('healthy load reports health_ok', names.includes('health_ok'), names.join(', ') || 'none')
   const okRes = events.find((e) => e.name === 'health_ok')
-  check('health_ok names a real resource', ['settings', 'services', 'delivery', 'faq'].includes(okRes?.properties?.resource), okRes?.properties?.resource)
+  // The signals this site declares. Kept as an explicit list rather than read from
+// the database on purpose: this asserts the site reports what it claims to, and a
+// list taken from the same place the site reads would agree with itself however
+// wrong it became.
+check(
+  'health_ok names a declared signal',
+  ['settings', 'services', 'delivery', 'faq', 'location', 'testimonials'].includes(
+    okRes?.properties?.resource,
+  ),
+  okRes?.properties?.resource,
+)
   check('no health_fail on a healthy load', !names.includes('health_fail'), names.join(', '))
   await page.close()
 }

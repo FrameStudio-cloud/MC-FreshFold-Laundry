@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, ShoppingBag, X } from 'lucide-react'
 import { business } from '../data/business.js'
 import { whatsappLink } from '../utils/whatsapp.js'
 import { fillTokens } from '../utils/format.js'
@@ -8,14 +8,24 @@ import { WhatsAppIcon, ShopLogo } from './BrandIcons.jsx'
 /**
  * Sticky header.
  *
- * Two pieces of real behaviour here rather than decoration:
+ * Three pieces of real behaviour here rather than decoration:
  *   - the mobile menu traps Tab, closes on Escape, and returns focus to the
  *     button that opened it. Without that it is unusable by keyboard, which is
  *     the most common failure in a nav like this.
  *   - scroll-spy marks the section you are reading with aria-current, so the
  *     state is exposed to assistive tech and not only to sighted users.
+ *   - the order button is in the header, not only in the mobile menu. It used to
+ *     live solely inside the `lg:hidden` panel, and the floating OrderBar is
+ *     `md:hidden`, so from `md` upwards there was no way to open the order
+ *     drawer at all. Worse than a missing button: the quantity steppers on each
+ *     service card still incremented, so a desktop visitor could build an order
+ *     that was never shown to them anywhere. This button covers exactly the range
+ *     OrderBar does not, so the two never overlap and never leave a gap.
+ *
+ * @param {function} [onOpenOrder] Open the order drawer
+ * @param {number}   [orderCount]  Items in the order, for the badge
  */
-export function Navbar({ onOpenOrder }) {
+export function Navbar({ onOpenOrder, orderCount = 0 }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [active, setActive] = useState('')
@@ -148,6 +158,37 @@ export function Navbar({ onOpenOrder }) {
             <WhatsAppIcon size={18} />
             {business.navOrderLabel ?? 'Order now'}
           </a>
+
+          <button
+            type="button"
+            onClick={() => onOpenOrder?.()}
+            aria-label={
+              orderCount
+                ? `Open order summary, ${orderCount} item${orderCount === 1 ? '' : 's'}`
+                : business.order.drawerOpenLabel
+            }
+            // Appears exactly where the floating OrderBar stops, so there is
+            // always a cart within reach and never two competing ones.
+            className="press hidden h-12 items-center gap-2.5 rounded-full bg-primary-600 px-5 text-[0.9375rem] font-semibold text-white shadow-soft hover:bg-primary-700 md:inline-flex"
+          >
+            <ShoppingBag size={18} aria-hidden="true" />
+            {/* Decorative: the accessible name comes from the aria-label above, so
+                this is hidden from assistive tech rather than announced twice.
+                One span, not two - a hidden copy plus an sr-only copy meant the
+                label text was present in the DOM at every width, which shadowed
+                the visible order button in text-based selectors. */}
+            <span className="hidden xl:inline" aria-hidden="true">
+              {business.order.title}
+            </span>
+            {orderCount > 0 ? (
+              <span
+                aria-hidden="true"
+                className="grid h-7 min-w-7 place-items-center rounded-full bg-white/25 px-2 text-sm font-bold tabular-nums"
+              >
+                {orderCount}
+              </span>
+            ) : null}
+          </button>
 
           <button
             ref={toggleRef}

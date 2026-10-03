@@ -87,6 +87,8 @@ const faq = calls.filter((c) => c.includes('page=faq'))
 const delivery = calls.filter((c) => c.includes('page=delivery'))
 const pageViews = calls.filter((c) => c.startsWith('/api/page-views'))
 const events = calls.filter((c) => c.startsWith('/api/events'))
+const location = calls.filter((c) => c.includes('page=location'))
+const testimonials = calls.filter((c) => c.includes('page=testimonials'))
 const anyToken = tokenHeaders.some(Boolean)
 
 console.log(`EXPECT_REMOTE = ${expectRemote}`)
@@ -126,17 +128,32 @@ if (expectRemote) {
   check('called /api/services', services.length === 1)
   check('called the faq page-content route', faq.length === 1)
   check('called the delivery page-content route', delivery.length === 1)
+  check('called the location page-content route', location.length === 1)
+  check('called the testimonials page-content route', testimonials.length === 1)
   check('sent the site token header', anyToken)
   check('back-to-top rendered from feature_toggles', btt === 1)
   // One page view, and only ever one.
   check('posted one page view', pageViews.length === 1)
-  // Counting an exact total was the wrong invariant once health reporting existed:
-  // the SDK batches health_ok transitions into their own /api/events POSTs, so
-  // the total became a function of how many resources were healthy. Asserted
-  // instead: the five non-events calls are the four reads plus the page view,
-  // each named above. test-health asserts the contents of those event posts.
+
+  // Asserted by name, not by a hardcoded total. A magic number went stale twice
+  // here: once when health reporting added its own event batches, and again when
+  // Location and Testimonials added two more reads. The totals are summed from
+  // the named counts instead, so this still catches an *unexpected extra* call
+  // without needing editing every time a page is added.
   const nonEvents = calls.filter((c) => !c.startsWith('/api/events'))
-  check('four reads plus one page view, nothing else', nonEvents.length === 5, `${nonEvents.length} non-event calls`)
+  const expected =
+    settings.length +
+    services.length +
+    faq.length +
+    delivery.length +
+    location.length +
+    testimonials.length +
+    pageViews.length
+  check(
+    'only the named reads and one page view',
+    nonEvents.length === expected,
+    `${nonEvents.length} seen, ${expected} expected`,
+  )
   // Not a failure: the API is on Render's free plan and a cold start can
   // exceed the client's 4s budget, which is why this test waits for quiescence
   // instead of a timer. Surfaced so a cold-start storm is visible rather than

@@ -61,7 +61,7 @@ export default function App() {
         Skip to services
       </a>
 
-      <Navbar onOpenOrder={openSheet} />
+      <Navbar onOpenOrder={openSheet} orderCount={order.count} />
 
       {/* Nothing rendered. Arms the SDK on the site token, then reports one page
           view once the owner's page_tracking toggle has arrived. */}

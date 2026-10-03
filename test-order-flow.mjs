@@ -27,8 +27,15 @@ await bump('Wash & Fold', 3)
 await bump('Dry Clean — Shirt', 2)
 await bump('Shoe Cleaning', 2)
 
-// Open the sheet via the sticky mobile bar.
-await page.locator('button:has-text("Your order")').first().click()
+// Open the sheet via the order control that is actually on screen.
+//
+// `:visible` is load-bearing. At 360px the floating OrderBar is what a visitor
+// uses, but the header's order button exists in the DOM at every width (it is
+// display:none here, not absent) and carries the same words, so a plain
+// text selector matches that hidden one first and waits 30s for it to become
+// clickable. Targeting whichever control is visible is both what this test means
+// and what survives the header gaining its own cart button.
+await page.locator('button:visible', { hasText: 'Your order' }).first().click()
 await page.waitForSelector('[role="dialog"]')
 
 const href = await page.locator('[role="dialog"] a[href*="wa.me"]').getAttribute('href')
